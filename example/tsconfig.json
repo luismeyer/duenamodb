@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "module": "CommonJS",
+    "noImplicitAny": true,
+    "removeComments": true,
+    "preserveConstEnums": true,
+    "sourceMap": true,
+    "outDir": "lib",
+    "target": "ESNext",
+    "declaration": true,
+    "sourceRoot": "src"
+  },
+  "include": ["src"],
+  "references": [{ "path": "../" }]
+}

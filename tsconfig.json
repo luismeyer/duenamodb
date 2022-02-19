@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "module": "CommonJS",
+    "noImplicitAny": true,
+    "removeComments": true,
+    "preserveConstEnums": true,
+    "sourceMap": true,
+    "outDir": "lib",
+    "target": "ESNext",
+    "declaration": true,
+    "rootDir": "src"
+  },
+  "exclude": ["example", "lib"]
+}
