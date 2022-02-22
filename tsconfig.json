@@ -9,7 +9,8 @@
     "outDir": "lib",
     "target": "ESNext",
     "declaration": true,
-    "rootDir": "src"
+    "rootDir": "src",
+    "strict": true
   },
   "exclude": ["example", "lib"]
 }

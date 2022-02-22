@@ -1,16 +1,30 @@
 import { DocumentClient } from "aws-sdk/clients/dynamodb";
-import { PK } from "./types";
 
 import { DDBClient } from "./client";
+import { DynamoTypes, PK } from "./types";
 
+/**
+ * Create Function that gets item from ddb table
+ * @param tablename Tablename
+ * @param partitionKeyName Name of the Partitionkey
+ * @returns Function that gets item
+ */
 export const createGetItem = <
-  Attributes extends Record<string, any>,
-  PartitionKey extends PK
+  Attributes extends Record<string, DynamoTypes>,
+  PartitionKey extends keyof Attributes & PK
 >(
   tablename: string,
-  pKey: string
+  partitionKeyName: string
 ) => {
-  return (key: PartitionKey) => getItem<Attributes>(tablename, { [pKey]: key });
+  return (
+    partitionKey: Attributes[PartitionKey],
+    options: Omit<DocumentClient.GetItemInput, "TableName" | "Key"> = {}
+  ) =>
+    getItem<Attributes>(
+      tablename,
+      { [partitionKeyName]: partitionKey },
+      options
+    );
 };
 
 /**
@@ -22,14 +36,19 @@ export const createGetItem = <
  */
 export const getItem = async <T>(
   tablename: string,
-  key: DocumentClient.Key
+  key: DocumentClient.Key,
+  options: Omit<DocumentClient.GetItemInput, "TableName" | "Key">
 ): Promise<T | undefined> => {
   const res = await DDBClient.instance
-    .get({ TableName: tablename, Key: key })
+    .get({ ...options, TableName: tablename, Key: key })
     .promise();
 
-  if (res.$response.error || !res.Item) {
+  if (res.$response.error) {
     throw res.$response.error;
+  }
+
+  if (!res.Item) {
+    return undefined;
   }
 
   return res.Item as T;

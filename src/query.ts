@@ -1,49 +1,73 @@
 import { DocumentClient } from "aws-sdk/clients/dynamodb";
 
-import { DDBClient } from "./";
+import { DDBClient } from "./client";
 import {
   expressionAttributeNames,
   expressionAttributeValues,
   keyConditionExpression,
 } from "./expression-attribute";
 import { Keys } from "./object";
-import { GSI, PK } from "./types";
+import { DynamoTypes, GSI, PK } from "./types";
 
+type QueryOptions<
+  Attributes extends Record<string, DynamoTypes>,
+  GSISK extends keyof Attributes & PK
+> = {
+  sortKey?: Attributes[GSISK];
+  filterOptions?: Partial<Attributes>;
+  dynamodbOptions?: Omit<DocumentClient.QueryInput, "TableName">;
+};
+
+/**
+ * Creates A function to query the Table
+ * @param tablename Name of DynamoDB Table
+ * @param gsiOptions Definition of GSI
+ * @returns Function to query table
+ */
 export const createQueryItem = <
-  Attributes extends Record<string, any>,
-  GSIPK extends PK,
-  GSISK extends PK
+  Attributes extends Record<string, DynamoTypes>,
+  GSIPK extends keyof Attributes & PK,
+  GSISK extends keyof Attributes & PK = ""
 >(
   tablename: string,
-  { name, partitionKey }: GSI<GSIPK, GSISK>
+  gsiOptions: GSI<GSIPK, GSISK>
 ) => {
-  // TODO: implement sortkey
-  return (
-    keyOptions: Partial<Attributes>,
-    filterOptions: Partial<Attributes> = {}
-  ) => {
-    if (!Object.keys(keyOptions).includes(String(partitionKey))) {
-      throw new Error(`Missed partitionKey in ${name} Query`);
-    }
+  const { name, partitionKeyName, sortKeyName } = gsiOptions;
 
-    return queryObjects<Attributes>(tablename, name, keyOptions, filterOptions);
+  return (
+    partitionKey: Attributes[GSIPK],
+    options: QueryOptions<Attributes, GSISK> = {}
+  ) => {
+    const keyOptions = {
+      [partitionKeyName]: partitionKey,
+      ...(sortKeyName ? { [sortKeyName]: options.sortKey } : {}),
+    } as unknown as Partial<Attributes>;
+
+    const queryOptions = createQueryOptions(
+      name,
+      keyOptions,
+      options.filterOptions
+    );
+
+    return queryItems<Attributes>(tablename, {
+      ...(options.dynamodbOptions ?? {}),
+      ...queryOptions,
+    });
   };
 };
 
 /**
- * Query DDB items by creating the needed DDB structs
- * @param tableName Name of DDB table
+ * Create the needed query DDB structs
  * @param index DDB index name
  * @param keyOptions Keys and values to query
  * @param filterOptions Keys and values to filter after the query
- * @returns Items from the DDB
+ * @returns Query Options
  */
-export const queryObjects = <O>(
-  tablename: string,
+export const createQueryOptions = <O>(
   index: string,
   keyOptions: Partial<O>,
   filterOptions: Partial<O> = {}
-): Promise<O[]> => {
+) => {
   const keyKeys = Object.keys(keyOptions) as Keys<Partial<O>>;
 
   // DDB key/index condition structs
@@ -58,13 +82,13 @@ export const queryObjects = <O>(
   const filterNames = expressionAttributeNames(filterKeys);
   const filterExpression = keyConditionExpression(filterKeys) || undefined;
 
-  return queryItems(tablename, {
+  return {
     IndexName: index,
     ExpressionAttributeValues: { ...keyValues, ...filterValues },
     ExpressionAttributeNames: { ...keyNames, ...filterNames },
     KeyConditionExpression: keyExpression,
     FilterExpression: filterExpression,
-  });
+  };
 };
 
 /**
@@ -82,7 +106,11 @@ const queryItems = async <T>(
     .query({ ...options, TableName: tablename })
     .promise();
 
-  if (res.$response.error || !res.Items) {
+  if (res.$response.error) {
+    throw res.$response.error;
+  }
+
+  if (!res.Items) {
     return [];
   }
 
