@@ -12,6 +12,7 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: 16
+          always-auth: true
 
       - name: Install
         run: yarn
@@ -20,6 +21,6 @@ jobs:
         run: yarn build
 
       - name: Publish
-        run: yarn publish
+        run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
