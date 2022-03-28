@@ -38,7 +38,7 @@ export const createQueryItem = <
     const keyOptions = {
       [partitionKeyName]: key,
       ...(sortKeyName ? { [sortKeyName]: options.sortKey } : {}),
-    } as unknown as Partial<Attributes>;
+    } as Partial<Attributes>;
 
     const queryOptions = createQueryOptions(
       name,

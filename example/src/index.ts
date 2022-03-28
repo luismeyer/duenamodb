@@ -1,18 +1,14 @@
+import { createPutItem, DDBClient } from "duenamodb";
 import { launch, stop } from "dynamodb-local";
-const dynamoLocalPort = 8000;
 
-import {
-  DDBClient,
-  createGetItem,
-  createQueryItem,
-  createPutItem,
-  createUpdateItem,
-  createScanItems,
-} from "duenamodb";
+import { manual } from "./manual";
+import { shorthand } from "./short-hand";
+
+const dynamoLocalPort = 8000;
 
 launch(dynamoLocalPort);
 
-type Attributes = {
+export type Attributes = {
   id: string;
   age: number;
   name: string;
@@ -23,21 +19,10 @@ DDBClient.params = {
   endpoint: `http://localhost:${dynamoLocalPort}`,
 };
 
-const tablename = "testtable";
-const indexname = "index";
-
-const getUser = createGetItem<Attributes, string>(tablename, "id");
-
-const queryUser = createQueryItem<Attributes, number>(tablename, {
-  name: indexname,
-  partitionKeyName: "age",
-});
+export const tablename = "testtable";
+export const indexname = "index";
 
 const saveUser = createPutItem<Attributes>(tablename);
-
-const updateUser = createUpdateItem<Attributes>(tablename);
-
-const scanUsers = createScanItems<Attributes>(tablename);
 
 const main = async () => {
   await DDBClient.dynamoDB
@@ -67,22 +52,7 @@ const main = async () => {
     await saveUser({ id: String(index), age: index, name: `User-${index}` });
   }
 
-  const scanResult = await scanUsers();
-  console.log("Scane Result: ", scanResult);
-
-  const getResult = await getUser("1");
-  console.log("Get Result: ", getResult);
-
-  const queryResult = await queryUser(20);
-  console.log("Query Result: ", queryResult);
-
-  const [userToUpdate] = queryResult;
-  const updateResult = await updateUser(
-    { ...userToUpdate, name: "TestName" },
-    { updateKeys: ["name"] }
-  );
-
-  console.log("Update Result: ", updateResult);
+  await Promise.all([manual(tablename, indexname), shorthand(tablename)]);
 
   stop(dynamoLocalPort);
 };

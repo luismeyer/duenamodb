@@ -6,3 +6,4 @@ export * from "./types";
 export * from "./put";
 export * from "./update";
 export * from "./scan";
+export * from "./table";
