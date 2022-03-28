@@ -1,7 +1,7 @@
-export type GSI<GSIPK extends PK, GSISK extends PK> = {
+export type GSI = {
   name: string;
-  partitionKeyName: GSIPK;
-  sortKeyName?: GSISK;
+  partitionKeyName: string;
+  sortKeyName?: string;
 };
 
 export type PK = string | number;

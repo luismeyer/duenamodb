@@ -11,9 +11,9 @@ import { DynamoTypes, GSI, PK } from "./types";
 
 type QueryOptions<
   Attributes extends Record<string, DynamoTypes>,
-  GSISK extends keyof Attributes & PK
+  GSISK extends PK
 > = {
-  sortKey?: Attributes[GSISK];
+  sortKey?: GSISK;
   filterOptions?: Partial<Attributes>;
   dynamodbOptions?: Omit<DocumentClient.QueryInput, "TableName">;
 };
@@ -26,20 +26,17 @@ type QueryOptions<
  */
 export const createQueryItem = <
   Attributes extends Record<string, DynamoTypes>,
-  GSIPK extends keyof Attributes & PK,
-  GSISK extends keyof Attributes & PK = ""
+  GSIPK extends PK,
+  GSISK extends PK = string
 >(
   tablename: string,
-  gsiOptions: GSI<GSIPK, GSISK>
+  gsiOptions: GSI
 ) => {
   const { name, partitionKeyName, sortKeyName } = gsiOptions;
 
-  return (
-    partitionKey: Attributes[GSIPK],
-    options: QueryOptions<Attributes, GSISK> = {}
-  ) => {
+  return (key: GSIPK, options: QueryOptions<Attributes, GSISK> = {}) => {
     const keyOptions = {
-      [partitionKeyName]: partitionKey,
+      [partitionKeyName]: key,
       ...(sortKeyName ? { [sortKeyName]: options.sortKey } : {}),
     } as unknown as Partial<Attributes>;
 

@@ -11,20 +11,15 @@ import { DynamoTypes, PK } from "./types";
  */
 export const createGetItem = <
   Attributes extends Record<string, DynamoTypes>,
-  PartitionKey extends keyof Attributes & PK
+  PartitionKey extends PK
 >(
   tablename: string,
-  partitionKeyName: string
+  partitionKeyName: PK
 ) => {
   return (
-    partitionKey: Attributes[PartitionKey],
+    key: PartitionKey,
     options: Omit<DocumentClient.GetItemInput, "TableName" | "Key"> = {}
-  ) =>
-    getItem<Attributes>(
-      tablename,
-      { [partitionKeyName]: partitionKey },
-      options
-    );
+  ) => getItem<Attributes>(tablename, { [partitionKeyName]: key }, options);
 };
 
 /**

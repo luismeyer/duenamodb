@@ -25,9 +25,9 @@ DDBClient.params = {
 const tablename = "testtable";
 const indexname = "index";
 
-const getUser = createGetItem<Attributes, "id">(tablename, "id");
+const getUser = createGetItem<Attributes, string>(tablename, "id");
 
-const queryUser = createQueryItem<Attributes, "age">(tablename, {
+const queryUser = createQueryItem<Attributes, number>(tablename, {
   name: indexname,
   partitionKeyName: "age",
 });

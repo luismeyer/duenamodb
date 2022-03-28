@@ -100,8 +100,10 @@ diff@^4.0.1:
   resolved "https://registry.yarnpkg.com/diff/-/diff-4.0.2.tgz#60f3aecb89d5fae520c11aa19efc2bb982aade7d"
   integrity sha512-58lmxKSA4BNyLz+HHMUzlOEpg09FV+ev6ZMe3vJihgdxzgcwZ8VoEEPmALCZG9LmqfVoNMMKpttIYTVG6uDY7A==
 
-duenamodb@../:
+duenamodb@1.0.0:
   version "1.0.0"
+  resolved "https://registry.yarnpkg.com/duenamodb/-/duenamodb-1.0.0.tgz#dacd81aab3c7062dd240e8fea90eef356bda9381"
+  integrity sha512-TM110FBd8cFdkf9Uth/mHi7J5KKTJcyUH0FHFMNOMnfDRLzIEwcQM7CZ5fkAgPvD/3koZa4I7Wk0wAbJn1l0EA==
   dependencies:
     aws-sdk "^2.1070.0"
 
