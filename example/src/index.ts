@@ -7,6 +7,7 @@ import {
   createQueryItem,
   createPutItem,
   createUpdateItem,
+  createScanItems,
 } from "duenamodb";
 
 launch(dynamoLocalPort);
@@ -36,6 +37,8 @@ const saveUser = createPutItem<Attributes>(tablename);
 
 const updateUser = createUpdateItem<Attributes>(tablename);
 
+const scanUsers = createScanItems<Attributes>(tablename);
+
 const main = async () => {
   await DDBClient.dynamoDB
     .createTable({
@@ -63,6 +66,9 @@ const main = async () => {
   for (let index = 0; index <= 20; index++) {
     await saveUser({ id: String(index), age: index, name: `User-${index}` });
   }
+
+  const scanResult = await scanUsers();
+  console.log("Scane Result: ", scanResult);
 
   const getResult = await getUser("1");
   console.log("Get Result: ", getResult);

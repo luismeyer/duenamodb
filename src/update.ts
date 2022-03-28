@@ -55,7 +55,7 @@ export const createUpdateItem = <
  * @param keys The Object-Keys that are contain new values
  * @returns DDB String to update the DB
  */
-const createUpdateExpression = (keys: string[]): string => {
+export const createUpdateExpression = (keys: string[]): string => {
   const expression = keys.map(
     (key) =>
       `${expressionAttributeNameKey(key)} = ${expressionAttributeValueKey(key)}`
@@ -70,7 +70,7 @@ const createUpdateExpression = (keys: string[]): string => {
  * @param keys The Object-kEys that will be removed
  * @returns DDB String to remove from DB
  */
-const createRemoveExpression = (keys: string[]): string =>
+export const createRemoveExpression = (keys: string[]): string =>
   keys.length > 0 ? `REMOVE ${keys.map(expressionAttributeNameKey)}` : "";
 
 /**
@@ -79,7 +79,9 @@ const createRemoveExpression = (keys: string[]): string =>
  * @param options The keys to update and remove
  * @returns Update options
  */
-const createUpdateOptions = <Attributes extends Record<string, DynamoTypes>>(
+export const createUpdateOptions = <
+  Attributes extends Record<string, DynamoTypes>
+>(
   updatedObject: Attributes,
   options: UpdateItemOptions<Attributes>
 ): Omit<DocumentClient.UpdateItemInput, "TableName"> | undefined => {
@@ -127,7 +129,7 @@ const createUpdateOptions = <Attributes extends Record<string, DynamoTypes>>(
  * @param input DDB input options
  * @returns Boolean if sucess
  */
-const updateItem = async (
+export const updateItem = async (
   tableName: string,
   input: Omit<DocumentClient.UpdateItemInput, "TableName">
 ): Promise<boolean> => {

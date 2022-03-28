@@ -95,7 +95,7 @@ export const createQueryOptions = <O>(
  * @param options DDB Query Options
  * @returns Queried items
  */
-const queryItems = async <T>(
+export const queryItems = async <T>(
   tablename: string,
   options: Omit<DocumentClient.QueryInput, "TableName">
 ): Promise<T[]> => {

@@ -5,3 +5,4 @@ export * from "./query";
 export * from "./types";
 export * from "./put";
 export * from "./update";
+export * from "./scan";

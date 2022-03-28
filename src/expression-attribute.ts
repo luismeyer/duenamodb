@@ -58,8 +58,6 @@ export const expressionAttributeValues = <T>(
  * @param keys The Object-Keys that contain
  * @returns DDB String
  */
-
-("");
 export const keyConditionExpression = (keys: string[]): string =>
   keys
     .map(
