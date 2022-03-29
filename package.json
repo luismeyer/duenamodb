@@ -19,6 +19,10 @@
     "typescript": "^4.5.5"
   },
   "ava": {
+    "files": [
+      "tests/**/*",
+      "!tests/helper/**/*"
+    ],
     "extensions": [
       "ts"
     ],

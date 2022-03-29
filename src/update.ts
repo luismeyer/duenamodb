@@ -61,7 +61,7 @@ export const createUpdateExpression = (keys: string[]): string => {
       `${expressionAttributeNameKey(key)} = ${expressionAttributeValueKey(key)}`
   );
 
-  return keys.length > 0 ? `SET ${expression}` : "";
+  return keys.length > 0 ? `SET ${expression.join(" , ")}` : "";
 };
 
 /**
@@ -70,8 +70,11 @@ export const createUpdateExpression = (keys: string[]): string => {
  * @param keys The Object-kEys that will be removed
  * @returns DDB String to remove from DB
  */
-export const createRemoveExpression = (keys: string[]): string =>
-  keys.length > 0 ? `REMOVE ${keys.map(expressionAttributeNameKey)}` : "";
+export const createRemoveExpression = (keys: string[]): string => {
+  const expression = keys.map(expressionAttributeNameKey);
+
+  return keys.length > 0 ? `REMOVE ${expression.join(" , ")}` : "";
+};
 
 /**
  * Creates Update Options

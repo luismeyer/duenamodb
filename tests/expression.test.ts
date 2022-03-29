@@ -7,6 +7,7 @@ import {
   expressionAttributeValues,
   keyConditionExpression,
 } from "../src/expression";
+import { randomStringArray } from "./helper/array";
 
 const key = "test";
 
@@ -38,14 +39,11 @@ test("Expression-Attribute-Names creates correct mapping", (t) => {
 });
 
 test("Expression-Attribute-Names creates correct amount of entries", (t) => {
-  const entryCount = Math.floor(Math.random() * 100);
-  const keys = Array(entryCount)
-    .fill(1)
-    .map((_, index) => String(index));
+  const keys = randomStringArray();
 
   const names = expressionAttributeNames(keys);
 
-  t.is(Object.entries(names).length, entryCount);
+  t.is(Object.entries(names).length, keys.length);
   t.deepEqual(Object.values(names), keys);
 });
 
@@ -62,10 +60,7 @@ test("Expression-Attribute-Values creates correct mapping", (t) => {
 });
 
 test("Expression-Attribute-Value creates correct amount of entries", (t) => {
-  const entryCount = Math.floor(Math.random() * 100);
-  const keys = Array(entryCount)
-    .fill(1)
-    .map((_, index) => String(index));
+  const keys = randomStringArray();
 
   const valuesInput = keys.reduce(
     (acc, curr) => ({
@@ -77,7 +72,7 @@ test("Expression-Attribute-Value creates correct amount of entries", (t) => {
 
   const values = expressionAttributeValues<any>(valuesInput, keys);
 
-  t.is(Object.entries(values).length, entryCount);
+  t.is(Object.entries(values).length, keys.length);
   t.deepEqual(Object.values(values), Object.values(valuesInput));
 });
 
@@ -95,22 +90,19 @@ test("Key-Condition-Expression includes Name-Key and Value-Key", (t) => {
 });
 
 test("Key-Condition-Expression handles multiple Keys", (t) => {
-  const entryCount = Math.floor(Math.random() * 100);
-  const keys = Array(entryCount)
-    .fill(1)
-    .map((_, index) => String(index));
+  const keys = randomStringArray();
 
   const exp = keyConditionExpression(keys);
 
   const andMatches = exp.match(/ and /g);
-  t.is(andMatches?.length, entryCount - 1);
+  t.is(andMatches?.length, keys.length - 1);
 
   const equalMatches = exp.match(/ = /g);
-  t.is(equalMatches?.length, entryCount);
+  t.is(equalMatches?.length, keys.length);
 
   const colonMatches = exp.match(/:/g);
-  t.is(colonMatches?.length, entryCount);
+  t.is(colonMatches?.length, keys.length);
 
   const hashtagMatches = exp.match(/#/g);
-  t.is(hashtagMatches?.length, entryCount);
+  t.is(hashtagMatches?.length, keys.length);
 });
