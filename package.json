@@ -23,6 +23,7 @@
     "typescript": "^4.5.5"
   },
   "ava": {
+    "timeout": "1m",
     "files": [
       "test/**/*",
       "!test/helper/**/*"
