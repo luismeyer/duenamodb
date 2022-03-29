@@ -24,8 +24,8 @@
   },
   "ava": {
     "files": [
-      "tests/**/*",
-      "!tests/helper/**/*"
+      "test/**/*",
+      "!test/helper/**/*"
     ],
     "extensions": [
       "ts"
