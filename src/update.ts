@@ -1,13 +1,13 @@
 import { DocumentClient } from "aws-sdk/clients/dynamodb";
 
-import { Keys } from "./object";
 import { DDBClient } from "./client";
 import {
   expressionAttributeNameKey,
-  expressionAttributeValueKey,
   expressionAttributeNames,
+  expressionAttributeValueKey,
   expressionAttributeValues,
 } from "./expression";
+import { Keys } from "./object";
 import { DynamoTypes } from "./types";
 
 export type UpdateItemOptions<T> = {
