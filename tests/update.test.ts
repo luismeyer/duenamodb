@@ -3,8 +3,8 @@ import test from "ava";
 import {
   expressionAttributeNameKey,
   expressionAttributeValueKey,
-} from "../src/expression";
-import { createRemoveExpression, createUpdateExpression } from "../src/update";
+} from "../src";
+import { createRemoveExpression, createUpdateExpression } from "../src";
 import { randomStringArray } from "./helper/array";
 
 const key = "test";

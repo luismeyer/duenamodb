@@ -1,5 +1,5 @@
 export const randomStringArray = () => {
-  const entryCount = Math.floor(Math.random() * 100);
+  const entryCount = Math.floor(Math.random() * 10) + 2;
 
   return Array(entryCount)
     .fill(1)

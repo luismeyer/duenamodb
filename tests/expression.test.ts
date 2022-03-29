@@ -6,7 +6,7 @@ import {
   expressionAttributeValueKey,
   expressionAttributeValues,
   keyConditionExpression,
-} from "../src/expression";
+} from "../src";
 import { randomStringArray } from "./helper/array";
 
 const key = "test";

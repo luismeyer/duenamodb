@@ -10,7 +10,9 @@
     "target": "ESNext",
     "declaration": true,
     "rootDir": "src",
-    "strict": true
+    "strict": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true
   },
   "exclude": ["example", "lib", "node_modules", "test"],
   "include": ["src"]

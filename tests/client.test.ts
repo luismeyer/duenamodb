@@ -1,6 +1,6 @@
 import test from "ava";
 
-import { DDBClient } from "../src/client";
+import { DDBClient } from "../src";
 
 test("Document-Client is always the same instance", (t) => {
   const firstInstance = DDBClient.instance;
