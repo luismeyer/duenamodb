@@ -17,13 +17,11 @@ test.serial("Put creates Item", async (t) => {
 
   t.is(res, attributes);
 
-  const item = await DDBClient.dynamoDB
-    .getItem({ Key: { id: { S: id } }, TableName: tablename })
+  const item = await DDBClient.instance
+    .get({ Key: { id }, TableName: tablename })
     .promise();
 
   t.assert(item.Item);
 
-  t.deepEqual(item.Item?.id, { S: attributes.id });
-  t.deepEqual(item.Item?.age, { N: String(attributes.age) });
-  t.deepEqual(item.Item?.name, { S: attributes.name });
+  t.deepEqual(item.Item, attributes);
 });
