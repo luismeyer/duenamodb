@@ -10,7 +10,7 @@ test.serial.before(async () => {
 test.serial("Get fetches Item", async (t) => {
   const get = createGetItem<Attributes, string>(tablename, "id");
 
-  const id = "1";
+  const id = "123";
   const attributes = { id, age: 1, name: "test" };
 
   await DDBClient.instance

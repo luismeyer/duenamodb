@@ -10,7 +10,7 @@ test.serial.before(async () => {
 test.serial("Put creates Item", async (t) => {
   const put = createPutItem<Attributes>(tablename);
 
-  const id = "1";
+  const id = "456";
   const attributes = { id, age: 1, name: "test" };
 
   const res = await put(attributes);
