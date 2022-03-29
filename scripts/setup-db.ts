@@ -1,5 +1,4 @@
 import child from "child_process";
-import { table } from "console";
 import { launch } from "dynamodb-local";
 import find from "find-process";
 import util from "util";
