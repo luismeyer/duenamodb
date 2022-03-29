@@ -24,7 +24,7 @@ type QueryOptions<
  * @param gsiOptions Definition of GSI
  * @returns Function to query table
  */
-export const createQueryItem = <
+export const createQueryItems = <
   Attributes extends Record<string, DynamoTypes>,
   GSIPK extends PK,
   GSISK extends PK = string

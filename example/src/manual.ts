@@ -1,6 +1,6 @@
 import {
   createGetItem,
-  createQueryItem,
+  createQueryItems,
   createUpdateItem,
   createScanItems,
 } from "duenamodb";
@@ -10,7 +10,7 @@ import { Attributes } from ".";
 export const manual = async (tablename: string, indexname: string) => {
   const getUser = createGetItem<Attributes, string>(tablename, "id");
 
-  const queryUser = createQueryItem<Attributes, number>(tablename, {
+  const queryUser = createQueryItems<Attributes, number>(tablename, {
     name: indexname,
     partitionKeyName: "age",
   });
