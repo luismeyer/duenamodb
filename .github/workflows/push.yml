@@ -1,7 +1,8 @@
-name: Publish to npm
+name: Verify good stuff is pushed
 on:
-  release:
-    types: [created]
+  push:
+    branches:
+      - main
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -12,8 +13,6 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: '16.x'
-          always-auth: true
-          registry-url: 'https://registry.npmjs.org'
 
       - name: 🛠 Install
         run: yarn
@@ -23,8 +22,3 @@ jobs:
 
       - name: 🏗 Build
         run: yarn build
-
-      - name: 📢 Publish
-        run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

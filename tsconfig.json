@@ -12,5 +12,6 @@
     "rootDir": "src",
     "strict": true
   },
-  "exclude": ["example", "lib", "node_modules"]
+  "exclude": ["example", "lib", "node_modules", "test"],
+  "include": ["src"]
 }

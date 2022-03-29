@@ -7,7 +7,7 @@ import {
   expressionAttributeValueKey,
   expressionAttributeNames,
   expressionAttributeValues,
-} from "./expression-attribute";
+} from "./expression";
 import { DynamoTypes } from "./types";
 
 export type UpdateItemOptions<T> = {

@@ -1,5 +1,5 @@
 export * from "./client";
-export * from "./expression-attribute";
+export * from "./expression";
 export * from "./get";
 export * from "./query";
 export * from "./types";

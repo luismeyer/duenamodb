@@ -5,7 +5,7 @@ import {
   expressionAttributeNames,
   expressionAttributeValues,
   keyConditionExpression,
-} from "./expression-attribute";
+} from "./expression";
 import { Keys } from "./object";
 import { DynamoTypes, GSI, PK } from "./types";
 
