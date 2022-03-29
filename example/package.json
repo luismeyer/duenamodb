@@ -4,7 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "dependencies": {
-    "duenamodb": "1.0.0"
+    "duenamodb": "^1.1.0"
   },
   "scripts": {
     "start": "ts-node src/index.ts"
