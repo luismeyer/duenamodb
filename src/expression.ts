@@ -1,3 +1,5 @@
+import { Keys } from "./object";
+
 /**
  * Turns a string key into a DDB-name-key
  * @param key Some object key
@@ -22,7 +24,11 @@ export const expressionAttributeValueKey = (key: string): string =>
  */
 export const expressionAttributeNames = (
   names: string[]
-): Record<string, string> => {
+): Record<string, string> | undefined => {
+  if (names.length === 0) {
+    return;
+  }
+
   return names.reduce<Record<string, string>>(
     (acc, key) => ({
       ...acc,
@@ -42,7 +48,11 @@ export const expressionAttributeNames = (
 export const expressionAttributeValues = <T>(
   values: T,
   keys: (keyof T & string)[]
-): Record<string, T[keyof T]> => {
+): Record<string, T[keyof T]> | undefined => {
+  if (keys.length === 0) {
+    return;
+  }
+
   return keys.reduce<Record<string, T[keyof T]>>(
     (acc, key) => ({
       ...acc,
@@ -58,12 +68,34 @@ export const expressionAttributeValues = <T>(
  * @param keys The Object-Keys that contain
  * @returns DDB String
  */
-export const keyConditionExpression = (keys: string[]): string =>
-  keys
-    .map(
-      (key) =>
-        `${expressionAttributeNameKey(key)} = ${expressionAttributeValueKey(
-          key
-        )}`
-    )
-    .join(" and ");
+export const conditionExpression = (keys: string[]): string | undefined => {
+  if (keys.length === 0) {
+    return;
+  }
+
+  const array = keys.map(
+    (key) =>
+      `${expressionAttributeNameKey(key)} = ${expressionAttributeValueKey(key)}`
+  );
+
+  return array.join(" and ");
+};
+
+/**
+ * Creates all ddb structs for creating a condition expression
+ * @param object Input for condition expression
+ * @returns AttributeName, AttributeValues, Expression
+ */
+export const createConditionExpression = <T>(object: T) => {
+  const keys = Object.keys(object) as Keys<T>;
+
+  const attributeValues = expressionAttributeValues(object, keys);
+  const attributeNames = expressionAttributeNames(keys);
+  const expression = conditionExpression(keys);
+
+  return {
+    attributeNames,
+    attributeValues,
+    expression,
+  };
+};

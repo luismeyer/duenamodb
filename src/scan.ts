@@ -1,7 +1,13 @@
 import { DocumentClient } from "aws-sdk/clients/dynamodb";
 
 import { DDBClient } from "./client";
+import { createConditionExpression } from "./expression";
 import { DynamoTypes } from "./types";
+
+type ScanOptions<Attributes extends Record<string, DynamoTypes>> = {
+  filterOptions?: Partial<Attributes>;
+  dynamodbOptions?: Omit<DocumentClient.ScanInput, "TableName">;
+};
 
 /**
  * Create Function that scan items from ddb table
@@ -11,8 +17,40 @@ import { DynamoTypes } from "./types";
 export const createScanItems = <Attributes extends Record<string, DynamoTypes>>(
   tablename: string
 ) => {
-  return (options: Omit<DocumentClient.ScanInput, "TableName"> = {}) =>
-    scanItems<Attributes>(tablename, options);
+  return (options: ScanOptions<Attributes> = {}) => {
+    const scanOptions = createScanOptions(options.filterOptions);
+
+    return scanItems<Attributes>(tablename, {
+      ...scanOptions,
+      ...options.dynamodbOptions,
+    });
+  };
+};
+
+/**
+ * Creates the DDB structs for scan operation
+ * @param filterOptions Object to turn into ddb scruct
+ * @returns DDB structs
+ */
+export const createScanOptions = <A>(
+  filterOptions: Partial<A> = {}
+): Partial<DocumentClient.ScanInput> => {
+  if (Object.keys(filterOptions).length === 0) {
+    return {};
+  }
+
+  // DDB filter structs that run after the key condition
+  const {
+    attributeNames: filterNames,
+    attributeValues: filterValues,
+    expression: filterExpression,
+  } = createConditionExpression(filterOptions);
+
+  return {
+    ExpressionAttributeValues: { ...filterValues },
+    ExpressionAttributeNames: { ...filterNames },
+    FilterExpression: filterExpression,
+  };
 };
 
 /**

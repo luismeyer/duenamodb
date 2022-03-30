@@ -5,7 +5,7 @@ const { dbPort, tablename, indexname } = test;
 
 export { dbPort, tablename, indexname };
 
-export const setupDB = async () => {
+export const setupDB = () => {
   DDBClient.params = {
     region: "localhost",
     endpoint: `http://localhost:${dbPort}`,

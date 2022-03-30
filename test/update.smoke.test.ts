@@ -1,14 +1,14 @@
 import test from "ava";
 
 import { createUpdateItem, DDBClient } from "../src";
-import { Attributes, setupDB, tablename, indexname } from "./helper/db";
+import { Attributes, setupDB, tablename } from "./helper/db";
 
 test.serial.before(async () => {
-  await setupDB();
+  setupDB();
 });
 
 test.serial("Update changes Item", async (t) => {
-  const update = createUpdateItem<Attributes>(tablename);
+  const update = createUpdateItem<Attributes>(tablename, "id");
 
   const id = "123456";
   const attributes: Attributes = { id, age: 1, name: "NAME" };

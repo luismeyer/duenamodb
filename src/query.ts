@@ -1,12 +1,8 @@
 import { DocumentClient } from "aws-sdk/clients/dynamodb";
 
 import { DDBClient } from "./client";
-import {
-  expressionAttributeNames,
-  expressionAttributeValues,
-  keyConditionExpression,
-} from "./expression";
-import { Keys } from "./object";
+import { createConditionExpression } from "./expression";
+import { maybeMerge } from "./object";
 import { DynamoTypes, GSI, PK } from "./types";
 
 type QueryOptions<
@@ -37,7 +33,8 @@ export const createQueryItems = <
   return (key: GSIPK, options: QueryOptions<Attributes, GSISK> = {}) => {
     const keyOptions = {
       [partitionKeyName]: key,
-      ...(sortKeyName ? { [sortKeyName]: options.sortKey } : {}),
+
+      ...maybeMerge(sortKeyName, options.sortKey),
     } as Partial<Attributes>;
 
     const queryOptions = createQueryOptions(
@@ -47,7 +44,7 @@ export const createQueryItems = <
     );
 
     return queryItems<Attributes>(tablename, {
-      ...(options.dynamodbOptions ?? {}),
+      ...options.dynamodbOptions,
       ...queryOptions,
     });
   };
@@ -60,31 +57,32 @@ export const createQueryItems = <
  * @param filterOptions Keys and values to filter after the query
  * @returns Query Options
  */
-export const createQueryOptions = <O>(
+export const createQueryOptions = <A>(
   index: string,
-  keyOptions: Partial<O>,
-  filterOptions: Partial<O> = {}
-) => {
-  const keyKeys = Object.keys(keyOptions) as Keys<Partial<O>>;
-
+  keyOptions: Partial<A>,
+  filterOptions: Partial<A> = {}
+): Partial<DocumentClient.QueryInput> => {
   // DDB key/index condition structs
-  const keyValues = expressionAttributeValues(keyOptions, keyKeys);
-  const keyNames = expressionAttributeNames(keyKeys);
-  const keyExpression = keyConditionExpression(keyKeys);
-
-  const filterKeys = Object.keys(filterOptions) as Keys<Partial<O>>;
+  const {
+    attributeNames: keyNames,
+    attributeValues: keyValues,
+    expression: keyExpression,
+  } = createConditionExpression(keyOptions);
 
   // DDB filter structs that run after the key condition
-  const filterValues = expressionAttributeValues(filterOptions, filterKeys);
-  const filterNames = expressionAttributeNames(filterKeys);
-  const filterExpression = keyConditionExpression(filterKeys) || undefined;
+  const {
+    attributeNames: filterNames,
+    attributeValues: filterValues,
+    expression: filterExpression,
+  } = createConditionExpression(filterOptions);
 
   return {
     IndexName: index,
     ExpressionAttributeValues: { ...keyValues, ...filterValues },
     ExpressionAttributeNames: { ...keyNames, ...filterNames },
     KeyConditionExpression: keyExpression,
-    FilterExpression: filterExpression,
+
+    ...maybeMerge("FilterExpression", filterExpression),
   };
 };
 

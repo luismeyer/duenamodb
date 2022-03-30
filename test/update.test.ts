@@ -12,9 +12,9 @@ const key = "test";
 test("Create-Update-Expression creates update string", (t) => {
   const exp = createUpdateExpression([key]);
 
-  t.true(exp.includes("SET "));
-  t.true(exp.includes(key));
-  t.true(exp.includes(" = "));
+  t.true(exp?.includes("SET "));
+  t.true(exp?.includes(key));
+  t.true(exp?.includes(" = "));
 });
 
 test("Create-Update-Expression includes keys", (t) => {
@@ -23,8 +23,8 @@ test("Create-Update-Expression includes keys", (t) => {
   const nameKey = expressionAttributeNameKey(key);
   const valueKey = expressionAttributeValueKey(key);
 
-  t.true(exp.includes(nameKey));
-  t.true(exp.includes(valueKey));
+  t.true(exp?.includes(nameKey));
+  t.true(exp?.includes(valueKey));
 });
 
 test("Create-Update-Expression handles multiple keys", (t) => {
@@ -32,18 +32,18 @@ test("Create-Update-Expression handles multiple keys", (t) => {
 
   const exp = createUpdateExpression(keys);
 
-  const colonMatches = exp.match(/ , /g);
+  const colonMatches = exp?.match(/ , /g);
   t.is(colonMatches?.length, keys.length - 1);
 
-  const equalMatches = exp.match(/ = /g);
+  const equalMatches = exp?.match(/ = /g);
   t.is(equalMatches?.length, keys.length);
 });
 
 test("Create-Remove-Expression creates update string", (t) => {
   const exp = createRemoveExpression([key]);
 
-  t.true(exp.includes("REMOVE "));
-  t.true(exp.includes(key));
+  t.true(exp?.includes("REMOVE "));
+  t.true(exp?.includes(key));
 });
 
 test("Create-Remove-Expression includes key", (t) => {
@@ -51,7 +51,7 @@ test("Create-Remove-Expression includes key", (t) => {
 
   const nameKey = expressionAttributeNameKey(key);
 
-  t.true(exp.includes(nameKey));
+  t.true(exp?.includes(nameKey));
 });
 
 test("Create-Remove-Expression handles multiple keys", (t) => {
@@ -59,6 +59,6 @@ test("Create-Remove-Expression handles multiple keys", (t) => {
 
   const exp = createRemoveExpression(keys);
 
-  const colonMatches = exp.match(/ , /g);
+  const colonMatches = exp?.match(/ , /g);
   t.is(colonMatches?.length, keys.length - 1);
 });

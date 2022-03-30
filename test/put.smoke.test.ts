@@ -2,15 +2,18 @@ import test from "ava";
 
 import { createPutItem, DDBClient } from "../src";
 import { Attributes, setupDB, tablename } from "./helper/db";
+import { randomNumber } from "./helper/random";
+
+const seed = randomNumber();
 
 test.serial.before(async () => {
-  await setupDB();
+  setupDB();
 });
 
 test.serial("Put creates Item", async (t) => {
   const put = createPutItem<Attributes>(tablename);
 
-  const id = "456";
+  const id = seed + "456";
   const attributes = { id, age: 1, name: "test" };
 
   const res = await put(attributes);

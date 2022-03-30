@@ -15,7 +15,7 @@ export const manual = async (tablename: string, indexname: string) => {
     partitionKeyName: "age",
   });
 
-  const updateUser = createUpdateItem<Attributes>(tablename);
+  const updateUser = createUpdateItem<Attributes>(tablename, "id");
 
   const scanUsers = createScanItems<Attributes>(tablename);
 

@@ -21,7 +21,7 @@ export const createTableFunctions = <
 
   const putItem = createPutItem<Attributes>(tablename);
 
-  const updateItem = createUpdateItem<Attributes>(tablename);
+  const updateItem = createUpdateItem<Attributes>(tablename, partitionKeyName);
 
   const getItem = createGetItem<Attributes, PartitionKey>(
     tablename,

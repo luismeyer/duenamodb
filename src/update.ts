@@ -24,10 +24,11 @@ export type UpdateItemOptions<T> = {
 export const createUpdateItem = <
   Attributes extends Record<string, DynamoTypes>
 >(
-  tablename: string
+  tablename: string,
+  partitionKeyName: keyof Attributes
 ) => {
   return async (item: Attributes, options: UpdateItemOptions<Attributes>) => {
-    const updateOptions = createUpdateOptions(item, options);
+    const updateOptions = createUpdateOptions(partitionKeyName, item, options);
     if (!updateOptions) {
       return item;
     }
@@ -55,13 +56,17 @@ export const createUpdateItem = <
  * @param keys The Object-Keys that are contain new values
  * @returns DDB String to update the DB
  */
-export const createUpdateExpression = (keys: string[]): string => {
-  const expression = keys.map(
+export const createUpdateExpression = (keys: string[]): string | undefined => {
+  if (keys.length === 0) {
+    return;
+  }
+
+  const exp = keys.map(
     (key) =>
       `${expressionAttributeNameKey(key)} = ${expressionAttributeValueKey(key)}`
   );
 
-  return keys.length > 0 ? `SET ${expression.join(" , ")}` : "";
+  return `SET ${exp.join(" , ")}`;
 };
 
 /**
@@ -70,10 +75,14 @@ export const createUpdateExpression = (keys: string[]): string => {
  * @param keys The Object-kEys that will be removed
  * @returns DDB String to remove from DB
  */
-export const createRemoveExpression = (keys: string[]): string => {
+export const createRemoveExpression = (keys: string[]): string | undefined => {
+  if (keys.length === 0) {
+    return;
+  }
+
   const expression = keys.map(expressionAttributeNameKey);
 
-  return keys.length > 0 ? `REMOVE ${expression.join(" , ")}` : "";
+  return `REMOVE ${expression.join(" , ")}`;
 };
 
 /**
@@ -85,6 +94,7 @@ export const createRemoveExpression = (keys: string[]): string => {
 export const createUpdateOptions = <
   Attributes extends Record<string, DynamoTypes>
 >(
+  partitionKeyName: keyof Attributes,
   updatedObject: Attributes,
   options: UpdateItemOptions<Attributes>
 ): Omit<DocumentClient.UpdateItemInput, "TableName"> | undefined => {
@@ -113,16 +123,16 @@ export const createUpdateOptions = <
       : {};
 
   // the update update expression creates SET #attributeNames = :attributeValue
-  const UpdateUpdateExpression = createUpdateExpression(updateKeys);
+  const UpdateUpdateExpression = createUpdateExpression(updateKeys) ?? "";
 
   // the remove update expression creates Remove #attributeNames, ...
-  const RemoveUpdateExpression = createRemoveExpression(removeKeys);
+  const RemoveUpdateExpression = createRemoveExpression(removeKeys) ?? "";
 
   return {
-    Key: { id: updatedObject.id },
+    Key: { [partitionKeyName]: updatedObject[partitionKeyName] },
     ExpressionAttributeNames,
-    ...ExpressionAttributeValues,
     UpdateExpression: `${UpdateUpdateExpression} ${RemoveUpdateExpression}`,
+    ...ExpressionAttributeValues,
   };
 };
 
