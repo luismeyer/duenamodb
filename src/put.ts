@@ -34,7 +34,7 @@ export const putItem = async <T>(
     .promise();
 
   if (res.$response.error) {
-    throw new Error("Error putting into DB");
+    throw res.$response.error;
   }
 
   return input as T;

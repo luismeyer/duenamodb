@@ -1,7 +1,7 @@
-export type GSI = {
+export type GSI<Attributes extends Record<string, DynamoTypes>> = {
   name: string;
-  partitionKeyName: string;
-  sortKeyName?: string;
+  partitionKeyName: keyof Attributes;
+  sortKeyName?: keyof Attributes;
 };
 
 export type PK = string | number;

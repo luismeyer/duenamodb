@@ -96,5 +96,5 @@ const scanResult = await scanItems();
 Query items:
 
 ```ts
-const queryResult = await queryItem("foo");
+const queryResult = await queryItems("foo");
 ```

@@ -30,7 +30,7 @@ export const createQueryItems = <
   GSISK extends PK = string
 >(
   tablename: string,
-  gsiOptions: GSI
+  gsiOptions: GSI<Attributes>
 ) => {
   const { name, partitionKeyName, sortKeyName } = gsiOptions;
 

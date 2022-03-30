@@ -14,7 +14,7 @@ export const createGetItem = <
   PartitionKey extends PK
 >(
   tablename: string,
-  partitionKeyName: string
+  partitionKeyName: keyof Attributes
 ) => {
   return (
     key: PartitionKey,
