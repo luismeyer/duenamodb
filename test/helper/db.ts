@@ -19,13 +19,17 @@ export type Attributes = {
   name: string;
 };
 
-export const createAttributes = (): Attributes => {
-  const id = randomNumber();
-  const age = randomNumber(100);
+export const createAttributes = (options?: {
+  id?: string;
+  age?: number;
+  name?: string;
+}): Attributes => {
+  const id = options?.id ?? randomNumber();
+  const age = options?.age ?? randomNumber(100);
 
   return {
     id: String(id),
     age,
-    name: `Name-${id}`,
+    name: options?.name ?? `Name-${id}`,
   };
 };

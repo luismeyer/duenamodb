@@ -14,19 +14,18 @@ test.serial.before(async () => {
 test.serial("Delete removes Item", async (t) => {
   const deleteItem = createDeleteItem<Attributes, string>(tablename, "id");
 
-  const id = String(seed);
   const attributes = createAttributes();
 
   await DDBClient.instance
     .put({ TableName: tablename, Item: attributes })
     .promise();
 
-  const success = await deleteItem(id);
+  const success = await deleteItem(attributes.id);
 
   t.true(success);
 
   const { Item } = await DDBClient.instance
-    .get({ TableName: tablename, Key: { id } })
+    .get({ TableName: tablename, Key: { id: attributes.id } })
     .promise();
 
   t.falsy(Item);
