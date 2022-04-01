@@ -4,19 +4,23 @@ on:
     branches:
       - main
 jobs:
-  push:
-    runs-on: ubuntu-latest
 
+  ava:
+    name: ⬣ Ava Test
+    runs-on: ubuntu-latest
     steps:
-      - name: 🛤 Checkout
-        uses: actions/checkout@v2
-        
-      - name: 🧹 Setup
-        uses: actions/setup-node@v2
+      - name: 🛑 Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.9.1
+
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v3
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v3
         with:
           node-version: '16.x'
 
-      - name: 🛠 Install
+      - name: 📥 Download deps
         run: yarn
 
       - name: 🧪 Test
@@ -24,6 +28,24 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: 'test'
           AWS_SECRET_ACCESS_KEY: 'test'
+
+  build:
+    name: ʦ Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🛑 Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.9.1
+
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v3
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16.x'
+
+      - name: 📥 Download deps
+        run: yarn
 
       - name: 🏗 Build
         run: yarn build
