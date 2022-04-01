@@ -2,6 +2,9 @@ import test from "ava";
 
 import { createUpdateItem, DDBClient } from "../src";
 import { Attributes, setupDB, tablename } from "./helper/db";
+import { randomNumber } from "./helper/random";
+
+const seed = randomNumber();
 
 test.serial.before(async () => {
   setupDB();
@@ -10,7 +13,7 @@ test.serial.before(async () => {
 test.serial("Update changes Item", async (t) => {
   const update = createUpdateItem<Attributes>(tablename, "id");
 
-  const id = "123456";
+  const id = seed + "123456";
   const attributes: Attributes = { id, age: 1, name: "NAME" };
 
   await DDBClient.instance

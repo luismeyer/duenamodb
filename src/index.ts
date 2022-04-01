@@ -7,3 +7,4 @@ export * from "./put";
 export * from "./update";
 export * from "./scan";
 export * from "./table";
+export * from "./delete";
