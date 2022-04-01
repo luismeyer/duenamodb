@@ -4,6 +4,13 @@
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "license": "MIT",
+  "keywords": [
+    "DynamoDB",
+    "DDB",
+    "AWS DynamoDB",
+    "DynamoDB Client",
+    "Amazon DynamoDB"
+  ],
   "scripts": {
     "watch": "tsc -w",
     "build": "tsc",
