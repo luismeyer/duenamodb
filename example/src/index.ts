@@ -1,8 +1,8 @@
-import { createPutItem, DDBClient } from "duenamodb";
-import { launch, stop } from "dynamodb-local";
+import { createPutItem, DDBClient } from 'duenamodb';
+import { launch, stop } from 'dynamodb-local';
 
-import { manual } from "./manual";
-import { shorthand } from "./short-hand";
+import { manual } from './manual';
+import { shorthand } from './short-hand';
 
 const dynamoLocalPort = 8000;
 
@@ -15,12 +15,12 @@ export type Attributes = {
 };
 
 DDBClient.params = {
-  region: "localhost",
+  region: 'localhost',
   endpoint: `http://localhost:${dynamoLocalPort}`,
 };
 
-export const tablename = "testtable";
-export const indexname = "index";
+export const tablename = 'testtable';
+export const indexname = 'index';
 
 const saveUser = createPutItem<Attributes>(tablename);
 
@@ -28,17 +28,17 @@ const main = async () => {
   await DDBClient.dynamoDB
     .createTable({
       TableName: tablename,
-      KeySchema: [{ AttributeName: "id", KeyType: "HASH" }],
+      KeySchema: [{ AttributeName: 'id', KeyType: 'HASH' }],
       ProvisionedThroughput: { ReadCapacityUnits: 1, WriteCapacityUnits: 1 },
       AttributeDefinitions: [
-        { AttributeName: "id", AttributeType: "S" },
-        { AttributeName: "age", AttributeType: "N" },
+        { AttributeName: 'id', AttributeType: 'S' },
+        { AttributeName: 'age', AttributeType: 'N' },
       ],
       GlobalSecondaryIndexes: [
         {
           IndexName: indexname,
-          KeySchema: [{ AttributeName: "age", KeyType: "HASH" }],
-          Projection: { ProjectionType: "ALL" },
+          KeySchema: [{ AttributeName: 'age', KeyType: 'HASH' }],
+          Projection: { ProjectionType: 'ALL' },
           ProvisionedThroughput: {
             ReadCapacityUnits: 1,
             WriteCapacityUnits: 1,

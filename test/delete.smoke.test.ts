@@ -1,15 +1,15 @@
-import test from "ava";
+import test from 'ava';
 
-import { createDeleteItem, DDBClient } from "../src";
+import { createDeleteItem, DDBClient } from '../src';
 
-import { Attributes, setupDB, tablename, createAttributes } from "./helper/db";
+import { Attributes, setupDB, tablename, createAttributes } from './helper/db';
 
 test.serial.before(async () => {
   setupDB();
 });
 
-test.serial("Delete removes Item", async (t) => {
-  const deleteItem = createDeleteItem<Attributes, string>(tablename, "id");
+test.serial('Delete removes Item', async t => {
+  const deleteItem = createDeleteItem<Attributes, string>(tablename, 'id');
 
   const attributes = createAttributes();
 

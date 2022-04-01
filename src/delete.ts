@@ -1,7 +1,7 @@
-import { DocumentClient } from "aws-sdk/clients/dynamodb";
+import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 
-import { DDBClient } from "./client";
-import { DynamoTypes, PK } from "./types";
+import { DDBClient } from './client';
+import { DynamoTypes, PK } from './types';
 
 /**
  * Delete Function that removes item from ddb table
@@ -18,7 +18,7 @@ export const createDeleteItem = <
 ) => {
   return (
     key: PartitionKey,
-    options: Omit<DocumentClient.GetItemInput, "TableName" | "Key"> = {}
+    options: Omit<DocumentClient.GetItemInput, 'TableName' | 'Key'> = {}
   ) => deleteItem<Attributes>(tablename, { [partitionKeyName]: key }, options);
 };
 
@@ -31,7 +31,7 @@ export const createDeleteItem = <
 export const deleteItem = async <T>(
   tablename: string,
   key: DocumentClient.Key,
-  options: Omit<DocumentClient.GetItemInput, "TableName" | "Key">
+  options: Omit<DocumentClient.GetItemInput, 'TableName' | 'Key'>
 ): Promise<boolean> => {
   const res = await DDBClient.instance
     .delete({ ...options, TableName: tablename, Key: key })

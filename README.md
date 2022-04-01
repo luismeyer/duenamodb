@@ -18,7 +18,7 @@ If not running in AWS Lambda configure the Client using the static accessor on t
 
 ```ts
 DDBClient.params = {
-  region: "localhost",
+  region: 'localhost',
   endpoint: `http://localhost:8000`,
 };
 ```
@@ -38,7 +38,7 @@ const putItem = createPutItem<Attributes>(tableName);
 Get item:
 
 ```ts
-const getItem = createGetItem<Attributes, string>(tableName, "id");
+const getItem = createGetItem<Attributes, string>(tableName, 'id');
 ```
 
 Update item:
@@ -58,14 +58,14 @@ Query items:
 ```ts
 const queryItems = createQueryItems<Attributes, number>(tableName, {
   name: indexName,
-  partitionKeyName: "name",
+  partitionKeyName: 'name',
 });
 ```
 
 Delete item:
 
 ```ts
-const deleteItem = createDeleteItem<Attributes, string>(tablename, "id");
+const deleteItem = createDeleteItem<Attributes, string>(tablename, 'id');
 ```
 
 ## Use Functions
@@ -81,15 +81,15 @@ await saveItem({ id: "1", name: "foo", ... });
 Get item:
 
 ```ts
-const getResult = await getItem("1"); 
+const getResult = await getItem('1');
 ```
 
 Update item:
 
 ```ts
 const updateResult = await updateItem(
-  { ...item, name: "bar" },
-  { updateKeys: ["name"] }
+  { ...item, name: 'bar' },
+  { updateKeys: ['name'] }
 );
 ```
 
@@ -102,11 +102,11 @@ const scanResult = await scanItems();
 Query items:
 
 ```ts
-const queryResult = await queryItems("foo");
+const queryResult = await queryItems('foo');
 ```
 
 Delete item:
 
 ```ts
-const success = await deleteItem("1");
+const success = await deleteItem('1');
 ```

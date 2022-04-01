@@ -1,4 +1,4 @@
-import test from "ava";
+import test from 'ava';
 
 import {
   expressionAttributeNameKey,
@@ -6,31 +6,31 @@ import {
   expressionAttributeValueKey,
   expressionAttributeValues,
   conditionExpression,
-} from "../src";
-import { randomStringArray } from "./helper/array";
+} from '../src';
+import { randomStringArray } from './helper/array';
 
-const key = "test";
+const key = 'test';
 
-test("Expression-Attribute-Name-Key includes key value", (t) => {
+test('Expression-Attribute-Name-Key includes key value', t => {
   const nameKey = expressionAttributeNameKey(key);
 
   t.true(nameKey.includes(key));
 });
 
-test("Expression-Attribute-Value-Key includes key value", (t) => {
+test('Expression-Attribute-Value-Key includes key value', t => {
   const valueKey = expressionAttributeValueKey(key);
 
   t.true(valueKey.includes(key));
 });
 
-test("Expression-Attribute-Value-Key and Expression-Attribute-Name-Key differ", (t) => {
+test('Expression-Attribute-Value-Key and Expression-Attribute-Name-Key differ', t => {
   const valueKey = expressionAttributeValueKey(key);
   const nameKey = expressionAttributeNameKey(key);
 
   t.not(valueKey, nameKey);
 });
 
-test("Expression-Attribute-Names creates correct mapping", (t) => {
+test('Expression-Attribute-Names creates correct mapping', t => {
   const namekey = expressionAttributeNameKey(key);
   const names = expressionAttributeNames([key]);
 
@@ -38,7 +38,7 @@ test("Expression-Attribute-Names creates correct mapping", (t) => {
   t.is(names?.[namekey], key);
 });
 
-test("Expression-Attribute-Names creates correct amount of entries", (t) => {
+test('Expression-Attribute-Names creates correct amount of entries', t => {
   const keys = randomStringArray();
 
   const names = expressionAttributeNames(keys);
@@ -47,8 +47,8 @@ test("Expression-Attribute-Names creates correct amount of entries", (t) => {
   t.deepEqual(Object.values(names ?? {}), keys);
 });
 
-test("Expression-Attribute-Values creates correct mapping", (t) => {
-  const value = "foo";
+test('Expression-Attribute-Values creates correct mapping', t => {
+  const value = 'foo';
 
   const valuesInput = { [key]: value };
   const valueKey = expressionAttributeValueKey(key);
@@ -59,7 +59,7 @@ test("Expression-Attribute-Values creates correct mapping", (t) => {
   t.is(values?.[valueKey], value);
 });
 
-test("Expression-Attribute-Value creates correct amount of entries", (t) => {
+test('Expression-Attribute-Value creates correct amount of entries', t => {
   const keys = randomStringArray();
 
   const valuesInput = keys.reduce(
@@ -76,7 +76,7 @@ test("Expression-Attribute-Value creates correct amount of entries", (t) => {
   t.deepEqual(Object.values(values ?? {}), Object.values(valuesInput));
 });
 
-test("Condition-Expression includes Name-Key and Value-Key", (t) => {
+test('Condition-Expression includes Name-Key and Value-Key', t => {
   const nameKey = expressionAttributeNameKey(key);
   const valueKey = expressionAttributeValueKey(key);
 
@@ -85,11 +85,11 @@ test("Condition-Expression includes Name-Key and Value-Key", (t) => {
   t.true(exp?.includes(nameKey));
   t.true(exp?.includes(valueKey));
 
-  t.false(exp?.includes("and"));
-  t.true(exp?.includes("="));
+  t.false(exp?.includes('and'));
+  t.true(exp?.includes('='));
 });
 
-test("Condition-Expression handles multiple Keys", (t) => {
+test('Condition-Expression handles multiple Keys', t => {
   const keys = randomStringArray();
 
   const exp = conditionExpression(keys);

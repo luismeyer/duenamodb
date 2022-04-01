@@ -1,5 +1,5 @@
-import { DynamoDB } from "aws-sdk";
-import { DocumentClient } from "aws-sdk/clients/dynamodb";
+import { DynamoDB } from 'aws-sdk';
+import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 
 export class DDBClient {
   private static _client: DocumentClient;

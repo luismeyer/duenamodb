@@ -1,13 +1,13 @@
-import test from "ava";
+import test from 'ava';
 
-import { createPutItem, DDBClient } from "../src";
-import { Attributes, createAttributes, setupDB, tablename } from "./helper/db";
+import { createPutItem, DDBClient } from '../src';
+import { Attributes, createAttributes, setupDB, tablename } from './helper/db';
 
 test.serial.before(async () => {
   setupDB();
 });
 
-test.serial("Put creates Item", async (t) => {
+test.serial('Put creates Item', async t => {
   const put = createPutItem<Attributes>(tablename);
 
   const attributes = createAttributes();

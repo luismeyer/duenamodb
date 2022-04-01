@@ -1,7 +1,7 @@
-import { DocumentClient } from "aws-sdk/clients/dynamodb";
+import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 
-import { DDBClient } from "./client";
-import { DynamoTypes } from "./types";
+import { DDBClient } from './client';
+import { DynamoTypes } from './types';
 
 /**
  * Create Function to put item into ddb table
@@ -13,7 +13,7 @@ export const createPutItem = <Attributes extends Record<string, DynamoTypes>>(
 ) => {
   return (
     item: Attributes,
-    options: Omit<DocumentClient.PutItemInput, "TableName" | "Item"> = {}
+    options: Omit<DocumentClient.PutItemInput, 'TableName' | 'Item'> = {}
   ) => putItem<Attributes>(tablename, item, options);
 };
 
@@ -27,7 +27,7 @@ export const createPutItem = <Attributes extends Record<string, DynamoTypes>>(
 export const putItem = async <T>(
   tableName: string,
   input: DocumentClient.PutItemInputAttributeMap,
-  options: Omit<DocumentClient.PutItemInput, "TableName" | "Item">
+  options: Omit<DocumentClient.PutItemInput, 'TableName' | 'Item'>
 ): Promise<T> => {
   const res = await DDBClient.instance
     .put({ TableName: tableName, Item: input, ...options })

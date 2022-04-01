@@ -1,9 +1,9 @@
-import { DocumentClient } from "aws-sdk/clients/dynamodb";
+import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 
-import { DDBClient } from "./client";
-import { createConditionExpression } from "./expression";
-import { maybeMerge } from "./object";
-import { DynamoTypes, GSI, PK } from "./types";
+import { DDBClient } from './client';
+import { createConditionExpression } from './expression';
+import { maybeMerge } from './object';
+import { DynamoTypes, GSI, PK } from './types';
 
 type QueryOptions<
   Attributes extends Record<string, DynamoTypes>,
@@ -11,7 +11,7 @@ type QueryOptions<
 > = {
   sortKey?: GSISK;
   filterOptions?: Partial<Attributes>;
-  dynamodbOptions?: Omit<DocumentClient.QueryInput, "TableName">;
+  dynamodbOptions?: Omit<DocumentClient.QueryInput, 'TableName'>;
 };
 
 /**
@@ -82,7 +82,7 @@ export const createQueryOptions = <A>(
     ExpressionAttributeNames: { ...keyNames, ...filterNames },
     KeyConditionExpression: keyExpression,
 
-    ...maybeMerge("FilterExpression", filterExpression),
+    ...maybeMerge('FilterExpression', filterExpression),
   };
 };
 
@@ -95,7 +95,7 @@ export const createQueryOptions = <A>(
  */
 export const queryItems = async <T>(
   tablename: string,
-  options: Omit<DocumentClient.QueryInput, "TableName">
+  options: Omit<DocumentClient.QueryInput, 'TableName'>
 ): Promise<T[]> => {
   const res = await DDBClient.instance
     .query({ ...options, TableName: tablename })

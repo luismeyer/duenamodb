@@ -1,12 +1,12 @@
-import { DocumentClient } from "aws-sdk/clients/dynamodb";
+import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 
-import { DDBClient } from "./client";
-import { createConditionExpression } from "./expression";
-import { DynamoTypes } from "./types";
+import { DDBClient } from './client';
+import { createConditionExpression } from './expression';
+import { DynamoTypes } from './types';
 
 type ScanOptions<Attributes extends Record<string, DynamoTypes>> = {
   filterOptions?: Partial<Attributes>;
-  dynamodbOptions?: Omit<DocumentClient.ScanInput, "TableName">;
+  dynamodbOptions?: Omit<DocumentClient.ScanInput, 'TableName'>;
 };
 
 /**
@@ -60,7 +60,7 @@ export const createScanOptions = <A>(
  */
 export const scanItems = async <T>(
   tablename: string,
-  options: Omit<DocumentClient.ScanInput, "TableName">
+  options: Omit<DocumentClient.ScanInput, 'TableName'>
 ): Promise<T[]> => {
   const res = await DDBClient.instance
     .scan({ ...options, TableName: tablename })

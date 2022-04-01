@@ -1,6 +1,6 @@
-import { test } from "../../package.json";
-import { DDBClient } from "../../src";
-import { randomNumber } from "./random";
+import { test } from '../../package.json';
+import { DDBClient } from '../../src';
+import { randomNumber } from './random';
 
 const { dbPort, tablename, indexname } = test;
 
@@ -8,7 +8,7 @@ export { dbPort, tablename, indexname };
 
 export const setupDB = () => {
   DDBClient.params = {
-    region: "localhost",
+    region: 'localhost',
     endpoint: `http://localhost:${dbPort}`,
   };
 };

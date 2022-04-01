@@ -1,7 +1,7 @@
-import { DocumentClient } from "aws-sdk/clients/dynamodb";
+import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 
-import { DDBClient } from "./client";
-import { DynamoTypes, PK } from "./types";
+import { DDBClient } from './client';
+import { DynamoTypes, PK } from './types';
 
 /**
  * Create Function that gets item from ddb table
@@ -18,7 +18,7 @@ export const createGetItem = <
 ) => {
   return (
     key: PartitionKey,
-    options: Omit<DocumentClient.GetItemInput, "TableName" | "Key"> = {}
+    options: Omit<DocumentClient.GetItemInput, 'TableName' | 'Key'> = {}
   ) => getItem<Attributes>(tablename, { [partitionKeyName]: key }, options);
 };
 
@@ -32,7 +32,7 @@ export const createGetItem = <
 export const getItem = async <T>(
   tablename: string,
   key: DocumentClient.Key,
-  options: Omit<DocumentClient.GetItemInput, "TableName" | "Key">
+  options: Omit<DocumentClient.GetItemInput, 'TableName' | 'Key'>
 ): Promise<T | undefined> => {
   const res = await DDBClient.instance
     .get({ ...options, TableName: tablename, Key: key })

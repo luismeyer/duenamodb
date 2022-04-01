@@ -1,19 +1,19 @@
-import { DocumentClient } from "aws-sdk/clients/dynamodb";
+import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 
-import { DDBClient } from "./client";
+import { DDBClient } from './client';
 import {
   expressionAttributeNameKey,
   expressionAttributeNames,
   expressionAttributeValueKey,
   expressionAttributeValues,
-} from "./expression";
-import { Keys } from "./object";
-import { DynamoTypes } from "./types";
+} from './expression';
+import { Keys } from './object';
+import { DynamoTypes } from './types';
 
 export type UpdateItemOptions<T> = {
   updateKeys?: Keys<T>;
   removeKeys?: Keys<T>;
-  dynamodbOptions?: Omit<DocumentClient.UpdateItemInput, "TableName">;
+  dynamodbOptions?: Omit<DocumentClient.UpdateItemInput, 'TableName'>;
 };
 
 /**
@@ -44,7 +44,7 @@ export const createUpdateItem = <
 
     // remove the values for the updated item
     const removeKeys = options.removeKeys ?? [];
-    removeKeys.forEach((key) => delete item[key]);
+    removeKeys.forEach(key => delete item[key]);
 
     return item;
   };
@@ -62,11 +62,11 @@ export const createUpdateExpression = (keys: string[]): string | undefined => {
   }
 
   const exp = keys.map(
-    (key) =>
+    key =>
       `${expressionAttributeNameKey(key)} = ${expressionAttributeValueKey(key)}`
   );
 
-  return `SET ${exp.join(" , ")}`;
+  return `SET ${exp.join(' , ')}`;
 };
 
 /**
@@ -82,7 +82,7 @@ export const createRemoveExpression = (keys: string[]): string | undefined => {
 
   const expression = keys.map(expressionAttributeNameKey);
 
-  return `REMOVE ${expression.join(" , ")}`;
+  return `REMOVE ${expression.join(' , ')}`;
 };
 
 /**
@@ -97,7 +97,7 @@ export const createUpdateOptions = <
   partitionKeyName: keyof Attributes,
   updatedObject: Attributes,
   options: UpdateItemOptions<Attributes>
-): Omit<DocumentClient.UpdateItemInput, "TableName"> | undefined => {
+): Omit<DocumentClient.UpdateItemInput, 'TableName'> | undefined => {
   if (!options.removeKeys && !options.updateKeys) {
     return;
   }
@@ -123,10 +123,10 @@ export const createUpdateOptions = <
       : {};
 
   // the update update expression creates SET #attributeNames = :attributeValue
-  const UpdateUpdateExpression = createUpdateExpression(updateKeys) ?? "";
+  const UpdateUpdateExpression = createUpdateExpression(updateKeys) ?? '';
 
   // the remove update expression creates Remove #attributeNames, ...
-  const RemoveUpdateExpression = createRemoveExpression(removeKeys) ?? "";
+  const RemoveUpdateExpression = createRemoveExpression(removeKeys) ?? '';
 
   return {
     Key: { [partitionKeyName]: updatedObject[partitionKeyName] },
@@ -144,7 +144,7 @@ export const createUpdateOptions = <
  */
 export const updateItem = async (
   tableName: string,
-  input: Omit<DocumentClient.UpdateItemInput, "TableName">
+  input: Omit<DocumentClient.UpdateItemInput, 'TableName'>
 ): Promise<boolean> => {
   const res = await DDBClient.instance
     .update({
@@ -154,7 +154,7 @@ export const updateItem = async (
     .promise();
 
   if (res.$response.error) {
-    throw new Error("Error updating into DB");
+    throw new Error('Error updating into DB');
   }
 
   return true;

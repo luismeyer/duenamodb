@@ -1,23 +1,23 @@
-import test from "ava";
+import test from 'ava';
 
 import {
   expressionAttributeNameKey,
   expressionAttributeValueKey,
-} from "../src";
-import { createRemoveExpression, createUpdateExpression } from "../src";
-import { randomStringArray } from "./helper/array";
+} from '../src';
+import { createRemoveExpression, createUpdateExpression } from '../src';
+import { randomStringArray } from './helper/array';
 
-const key = "test";
+const key = 'test';
 
-test("Create-Update-Expression creates update string", (t) => {
+test('Create-Update-Expression creates update string', t => {
   const exp = createUpdateExpression([key]);
 
-  t.true(exp?.includes("SET "));
+  t.true(exp?.includes('SET '));
   t.true(exp?.includes(key));
-  t.true(exp?.includes(" = "));
+  t.true(exp?.includes(' = '));
 });
 
-test("Create-Update-Expression includes keys", (t) => {
+test('Create-Update-Expression includes keys', t => {
   const exp = createUpdateExpression([key]);
 
   const nameKey = expressionAttributeNameKey(key);
@@ -27,7 +27,7 @@ test("Create-Update-Expression includes keys", (t) => {
   t.true(exp?.includes(valueKey));
 });
 
-test("Create-Update-Expression handles multiple keys", (t) => {
+test('Create-Update-Expression handles multiple keys', t => {
   const keys = randomStringArray();
 
   const exp = createUpdateExpression(keys);
@@ -39,14 +39,14 @@ test("Create-Update-Expression handles multiple keys", (t) => {
   t.is(equalMatches?.length, keys.length);
 });
 
-test("Create-Remove-Expression creates update string", (t) => {
+test('Create-Remove-Expression creates update string', t => {
   const exp = createRemoveExpression([key]);
 
-  t.true(exp?.includes("REMOVE "));
+  t.true(exp?.includes('REMOVE '));
   t.true(exp?.includes(key));
 });
 
-test("Create-Remove-Expression includes key", (t) => {
+test('Create-Remove-Expression includes key', t => {
   const exp = createRemoveExpression([key]);
 
   const nameKey = expressionAttributeNameKey(key);
@@ -54,7 +54,7 @@ test("Create-Remove-Expression includes key", (t) => {
   t.true(exp?.includes(nameKey));
 });
 
-test("Create-Remove-Expression handles multiple keys", (t) => {
+test('Create-Remove-Expression handles multiple keys', t => {
   const keys = randomStringArray();
 
   const exp = createRemoveExpression(keys);

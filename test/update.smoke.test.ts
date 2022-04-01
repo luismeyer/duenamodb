@@ -1,14 +1,14 @@
-import test from "ava";
+import test from 'ava';
 
-import { createUpdateItem, DDBClient } from "../src";
-import { Attributes, createAttributes, setupDB, tablename } from "./helper/db";
+import { createUpdateItem, DDBClient } from '../src';
+import { Attributes, createAttributes, setupDB, tablename } from './helper/db';
 
 test.serial.before(async () => {
   setupDB();
 });
 
-test.serial("Update changes Item", async (t) => {
-  const update = createUpdateItem<Attributes>(tablename, "id");
+test.serial('Update changes Item', async t => {
+  const update = createUpdateItem<Attributes>(tablename, 'id');
 
   const attributes: Attributes = createAttributes();
 
@@ -18,7 +18,7 @@ test.serial("Update changes Item", async (t) => {
 
   const newAttributes = await update(
     { ...attributes, age: 2 },
-    { updateKeys: ["age"] }
+    { updateKeys: ['age'] }
   );
 
   t.is(newAttributes?.age, 2);
@@ -28,7 +28,7 @@ test.serial("Update changes Item", async (t) => {
     .promise();
 
   if (!Item) {
-    throw new Error("Error Getting DynamoDB");
+    throw new Error('Error Getting DynamoDB');
   }
 
   t.is(Item.age, 2);

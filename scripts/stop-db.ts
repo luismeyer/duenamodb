@@ -1,16 +1,16 @@
-import child from "child_process";
-import find from "find-process";
-import util from "util";
+import child from 'child_process';
+import find from 'find-process';
+import util from 'util';
 
-import { test } from "../package.json";
+import { test } from '../package.json';
 
 const exec = util.promisify(child.exec);
 
 const { dbPort } = test;
 
-console.log("Stopping DB...");
+console.log('Stopping DB...');
 
-find("port", dbPort).then(async (ps) => {
+find('port', dbPort).then(async ps => {
   if (ps.length === 0) {
     return;
   }
@@ -20,5 +20,5 @@ find("port", dbPort).then(async (ps) => {
   const res = await exec(`kill -9 ${p.pid}`);
 
   console.log(res.stdout, res.stderr);
-  console.log("DB stopped");
+  console.log('DB stopped');
 });

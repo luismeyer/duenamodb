@@ -1,4 +1,4 @@
-import { Keys } from "./object";
+import { Keys } from './object';
 
 /**
  * Turns a string key into a DDB-name-key
@@ -74,11 +74,11 @@ export const conditionExpression = (keys: string[]): string | undefined => {
   }
 
   const array = keys.map(
-    (key) =>
+    key =>
       `${expressionAttributeNameKey(key)} = ${expressionAttributeValueKey(key)}`
   );
 
-  return array.join(" and ");
+  return array.join(' and ');
 };
 
 /**

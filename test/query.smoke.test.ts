@@ -1,27 +1,27 @@
-import test from "ava";
+import test from 'ava';
 
-import { createQueryItems, DDBClient } from "../src";
+import { createQueryItems, DDBClient } from '../src';
 import {
   Attributes,
   setupDB,
   tablename,
   indexname,
   createAttributes,
-} from "./helper/db";
-import { randomNumber } from "./helper/random";
+} from './helper/db';
+import { randomNumber } from './helper/random';
 
 const seed = randomNumber();
 
 const query = createQueryItems<Attributes, number>(tablename, {
   name: indexname,
-  partitionKeyName: "age",
+  partitionKeyName: 'age',
 });
 
 test.serial.before(async () => {
   setupDB();
 });
 
-test.serial("Query fetches Items", async (t) => {
+test.serial('Query fetches Items', async t => {
   const attributes = createAttributes({ age: seed });
 
   await DDBClient.instance
@@ -34,7 +34,7 @@ test.serial("Query fetches Items", async (t) => {
   t.deepEqual(items[0], attributes);
 });
 
-test.serial("Query filters Items", async (t) => {
+test.serial('Query filters Items', async t => {
   const count = 10;
 
   for (let i = 0; i < count; i++) {

@@ -4,7 +4,6 @@ on:
     branches:
       - main
 jobs:
-
   ava:
     name: ⬣ Ava Test
     runs-on: ubuntu-latest
@@ -15,7 +14,7 @@ jobs:
       - name: ⬇️ Checkout repo
         uses: actions/checkout@v3
 
-      - name: ⎔ Setup node
+      - name: 🛠 Setup node
         uses: actions/setup-node@v3
         with:
           node-version: '16.x'
@@ -39,7 +38,7 @@ jobs:
       - name: ⬇️ Checkout repo
         uses: actions/checkout@v3
 
-      - name: ⎔ Setup node
+      - name: 🛠 Setup node
         uses: actions/setup-node@v3
         with:
           node-version: '16.x'
@@ -49,3 +48,24 @@ jobs:
 
       - name: 🏗 Build
         run: yarn build
+
+  prettier:
+    name: ℹ Prettier
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🛑 Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.9.1
+
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v3
+
+      - name: 🛠 Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16.x'
+
+      - name: 📥 Download deps
+        run: yarn
+
+      - name: 🏗 Prettier
+        run: yarn prettier
