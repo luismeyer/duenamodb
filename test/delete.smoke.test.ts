@@ -3,9 +3,6 @@ import test from "ava";
 import { createDeleteItem, DDBClient } from "../src";
 
 import { Attributes, setupDB, tablename, createAttributes } from "./helper/db";
-import { randomNumber } from "./helper/random";
-
-const seed = randomNumber();
 
 test.serial.before(async () => {
   setupDB();

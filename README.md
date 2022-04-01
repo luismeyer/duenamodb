@@ -38,7 +38,7 @@ const putItem = createPutItem<Attributes>(tableName);
 Get item:
 
 ```ts
-const getItem = createGetItem<Attributes, string>(tableName, pkName);
+const getItem = createGetItem<Attributes, string>(tableName, "id");
 ```
 
 Update item:
@@ -58,8 +58,14 @@ Query items:
 ```ts
 const queryItems = createQueryItems<Attributes, number>(tableName, {
   name: indexName,
-  partitionKeyName: pkName,
+  partitionKeyName: "name",
 });
+```
+
+Delete item:
+
+```ts
+const deleteItem = createDeleteItem<Attributes, string>(tablename, "id");
 ```
 
 ## Use Functions
@@ -97,4 +103,10 @@ Query items:
 
 ```ts
 const queryResult = await queryItems("foo");
+```
+
+Delete item:
+
+```ts
+const success = await deleteItem("1");
 ```
