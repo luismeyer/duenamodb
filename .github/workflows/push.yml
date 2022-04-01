@@ -5,7 +5,7 @@ on:
       - main
 jobs:
   ava:
-    name: ⬣ Ava Test
+    name: 🔬 Ava Test
     runs-on: ubuntu-latest
     steps:
       - name: 🛑 Cancel Previous Runs
@@ -29,7 +29,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: 'test'
 
   build:
-    name: ʦ Build
+    name: 🏋️‍♀️ Build
     runs-on: ubuntu-latest
     steps:
       - name: 🛑 Cancel Previous Runs

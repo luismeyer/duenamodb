@@ -1,8 +1,8 @@
 # dÜnamodb 📀
 
-Simple DynamoDB client written in TypeScript
+Simple DynamoDB client written in TypeScript.
 
-## Setup
+## Setup 🛠
 
 Install the package
 
@@ -25,7 +25,11 @@ DDBClient.params = {
 
 Also you might need to provide mock AWS credentials inside the environment variables.
 
-## Create Functions
+## API 📄
+
+The API of dÜnamodb is straight forward. There is a create Function for every DynamoDB action.
+
+### Create the Functions 🏗
 
 To interact with your DynamoDB use the create-functions from the dÜnamodb lib
 
@@ -68,7 +72,7 @@ Delete item:
 const deleteItem = createDeleteItem<Attributes, string>(tablename, 'id');
 ```
 
-## Use Functions
+### Use the Functions 👷‍♀️
 
 Use the functions to read and write data from the DB
 
