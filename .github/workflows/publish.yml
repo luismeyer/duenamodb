@@ -38,6 +38,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag-prefix: 'v'
+          skip-tag: 'true'
 
       - name: 📢 Publish
         run: npm publish
