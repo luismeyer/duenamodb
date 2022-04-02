@@ -32,6 +32,13 @@ jobs:
       - name: 🏗 Build
         run: yarn build
 
+      - name: '⬆️ Version Bump'
+        uses: 'phips28/gh-action-bump-version@master'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag-prefix: 'v'
+
       - name: 📢 Publish
         run: npm publish
         env:
