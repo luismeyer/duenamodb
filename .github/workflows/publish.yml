@@ -32,13 +32,21 @@ jobs:
       - name: 🏗 Build
         run: yarn build
 
-      - name: '⬆️ Version Bump'
-        uses: 'phips28/gh-action-bump-version@master'
+      - name: 🔎 Find Version
+        id: version
+        run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
+
+      - name: ⬆️ Update pjson
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_VERSION: ${{ steps.version.outputs.tag }}
+        run: ts-node ./scripts/update-version.ts
+
+      - name: 🚀 Commit and Push Version Bump
+        uses: EndBug/add-and-commit@v9
         with:
-          tag-prefix: 'v'
-          skip-tag: 'true'
+          default_author: github_actor
+          message: 'ci: bump to Version ${{ steps.version.outputs.tag }}'
+          push: true
 
       - name: 📢 Publish
         run: npm publish
