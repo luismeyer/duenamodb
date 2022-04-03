@@ -69,3 +69,19 @@ jobs:
 
       - name: 🏗 Prettier
         run: yarn prettier
+
+  bump:
+    name: ⬆️ Bump Version
+    runs-on: ubuntu-latest
+    needs: [prettier, build, ava]
+    steps:
+      - name: 🛑 Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.9.1
+
+      - name: 🛸 Version Bump
+        uses: 'phips28/gh-action-bump-version@master'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag-prefix: 'v'
+          skip-tag: 'true'

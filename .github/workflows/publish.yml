@@ -11,10 +11,10 @@ jobs:
         uses: styfle/cancel-workflow-action@0.9.1
 
       - name: ⬇️ Checkout repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: 🛠 Setup node
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: '16.x'
           always-auth: true
@@ -31,22 +31,6 @@ jobs:
 
       - name: 🏗 Build
         run: yarn build
-
-      - name: 🔎 Find Version
-        id: version
-        run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
-
-      - name: ⬆️ Update pjson
-        env:
-          RELEASE_VERSION: ${{ steps.version.outputs.tag }}
-        run: yarn bump
-
-      - name: 🚀 Commit and Push Version Bump
-        uses: EndBug/add-and-commit@v9
-        with:
-          default_author: github_actor
-          message: 'ci: bump to Version ${{ steps.version.outputs.tag }}'
-          push: true
 
       - name: 📢 Publish
         run: npm publish
