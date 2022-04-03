@@ -18,7 +18,8 @@
     "posttest": "ts-node scripts/stop-db",
     "test": "ava",
     "prettier": "prettier --check .",
-    "prettier:write": "prettier --write ."
+    "prettier:write": "prettier --write .",
+    "bump": "ts-node scripts/update-version"
   },
   "dependencies": {
     "aws-sdk": "^2.1070.0"

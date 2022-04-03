@@ -39,7 +39,7 @@ jobs:
       - name: ⬆️ Update pjson
         env:
           RELEASE_VERSION: ${{ steps.version.outputs.tag }}
-        run: ts-node ./scripts/update-version.ts
+        run: yarn bump
 
       - name: 🚀 Commit and Push Version Bump
         uses: EndBug/add-and-commit@v9

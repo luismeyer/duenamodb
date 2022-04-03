@@ -17,3 +17,5 @@ const output = prettier.format(JSON.stringify(pjson), {
 });
 
 fs.writeFileSync(path.resolve(__dirname, '../package.json'), output);
+
+console.info('Updated Version in package.json');
