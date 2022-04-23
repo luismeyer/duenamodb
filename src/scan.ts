@@ -4,10 +4,13 @@ import { DDBClient } from './client';
 import { createConditionExpression } from './expression';
 import { DynamoTypes } from './types';
 
-type ScanOptions<Attributes extends Record<string, DynamoTypes>> = {
+export type ScanOptions<Attributes extends Record<string, DynamoTypes>> = {
   filterOptions?: Partial<Attributes>;
   dynamodbOptions?: Omit<DocumentClient.ScanInput, 'TableName'>;
 };
+
+export type ScanItemsFunction<Attributes extends Record<string, DynamoTypes>> =
+  (options?: ScanOptions<Attributes>) => Promise<Attributes[]>;
 
 /**
  * Create Function that scan items from ddb table
@@ -16,11 +19,11 @@ type ScanOptions<Attributes extends Record<string, DynamoTypes>> = {
  */
 export const createScanItems = <Attributes extends Record<string, DynamoTypes>>(
   tablename: string
-) => {
-  return (options: ScanOptions<Attributes> = {}) => {
+): ScanItemsFunction<Attributes> => {
+  return (options = {}) => {
     const scanOptions = createScanOptions(options.filterOptions);
 
-    return scanItems<Attributes>(tablename, {
+    return scanItems(tablename, {
       ...scanOptions,
       ...options.dynamodbOptions,
     });

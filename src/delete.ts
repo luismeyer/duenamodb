@@ -3,6 +3,11 @@ import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 import { DDBClient } from './client';
 import { DynamoTypes, PK } from './types';
 
+export type DeleteItemFunction<PartitionKey extends PK> = (
+  key: PartitionKey,
+  options?: Omit<DocumentClient.GetItemInput, 'TableName' | 'Key'>
+) => Promise<boolean>;
+
 /**
  * Delete Function that removes item from ddb table
  * @param tablename Tablename
@@ -15,11 +20,9 @@ export const createDeleteItem = <
 >(
   tablename: string,
   partitionKeyName: keyof Attributes
-) => {
-  return (
-    key: PartitionKey,
-    options: Omit<DocumentClient.GetItemInput, 'TableName' | 'Key'> = {}
-  ) => deleteItem<Attributes>(tablename, { [partitionKeyName]: key }, options);
+): DeleteItemFunction<PartitionKey> => {
+  return (key, options = {}) =>
+    deleteItem(tablename, { [partitionKeyName]: key }, options);
 };
 
 /**

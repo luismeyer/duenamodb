@@ -3,6 +3,11 @@ import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 import { DDBClient } from './client';
 import { DynamoTypes } from './types';
 
+export type PutItemFunction<Attributes extends Record<string, DynamoTypes>> = (
+  item: Attributes,
+  options?: Omit<DocumentClient.PutItemInput, 'TableName' | 'Item'>
+) => Promise<Attributes>;
+
 /**
  * Create Function to put item into ddb table
  * @param tablename Tablename
@@ -10,11 +15,8 @@ import { DynamoTypes } from './types';
  */
 export const createPutItem = <Attributes extends Record<string, DynamoTypes>>(
   tablename: string
-) => {
-  return (
-    item: Attributes,
-    options: Omit<DocumentClient.PutItemInput, 'TableName' | 'Item'> = {}
-  ) => putItem<Attributes>(tablename, item, options);
+): PutItemFunction<Attributes> => {
+  return (item, options = {}) => putItem(tablename, item, options);
 };
 
 /**

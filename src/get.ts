@@ -3,6 +3,14 @@ import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 import { DDBClient } from './client';
 import { DynamoTypes, PK } from './types';
 
+export type GetItemFunction<
+  Attributes extends Record<string, DynamoTypes>,
+  PartitionKey extends PK
+> = (
+  key: PartitionKey,
+  options?: Omit<DocumentClient.GetItemInput, 'TableName' | 'Key'>
+) => Promise<Attributes | undefined>;
+
 /**
  * Create Function that gets item from ddb table
  * @param tablename Tablename
@@ -15,11 +23,9 @@ export const createGetItem = <
 >(
   tablename: string,
   partitionKeyName: keyof Attributes
-) => {
-  return (
-    key: PartitionKey,
-    options: Omit<DocumentClient.GetItemInput, 'TableName' | 'Key'> = {}
-  ) => getItem<Attributes>(tablename, { [partitionKeyName]: key }, options);
+): GetItemFunction<Attributes, PartitionKey> => {
+  return (key, options = {}) =>
+    getItem(tablename, { [partitionKeyName]: key }, options);
 };
 
 /**

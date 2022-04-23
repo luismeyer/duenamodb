@@ -16,6 +16,12 @@ export type UpdateItemOptions<T> = {
   dynamodbOptions?: Omit<DocumentClient.UpdateItemInput, 'TableName'>;
 };
 
+export type UpdateItemFunction<Attributes extends Record<string, DynamoTypes>> =
+  (
+    item: Attributes,
+    options: UpdateItemOptions<Attributes>
+  ) => Promise<Attributes | undefined>;
+
 /**
  * Create util function that updates item in DB
  * @param tablename Tablename
@@ -26,8 +32,8 @@ export const createUpdateItem = <
 >(
   tablename: string,
   partitionKeyName: keyof Attributes
-) => {
-  return async (item: Attributes, options: UpdateItemOptions<Attributes>) => {
+): UpdateItemFunction<Attributes> => {
+  return async (item, options) => {
     const updateOptions = createUpdateOptions(partitionKeyName, item, options);
     if (!updateOptions) {
       return item;

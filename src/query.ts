@@ -5,7 +5,7 @@ import { createConditionExpression } from './expression';
 import { maybeMerge } from './object';
 import { DynamoTypes, GSI, PK } from './types';
 
-type QueryOptions<
+export type QueryOptions<
   Attributes extends Record<string, DynamoTypes>,
   GSISK extends PK
 > = {
@@ -13,6 +13,15 @@ type QueryOptions<
   filterOptions?: Partial<Attributes>;
   dynamodbOptions?: Omit<DocumentClient.QueryInput, 'TableName'>;
 };
+
+export type QueryItemsFunction<
+  Attributes extends Record<string, DynamoTypes>,
+  GSIPK extends PK,
+  GSISK extends PK = string
+> = (
+  key: GSIPK,
+  options?: QueryOptions<Attributes, GSISK>
+) => Promise<Attributes[]>;
 
 /**
  * Creates A function to query the Table
@@ -27,10 +36,10 @@ export const createQueryItems = <
 >(
   tablename: string,
   gsiOptions: GSI<Attributes>
-) => {
+): QueryItemsFunction<Attributes, GSIPK, GSISK> => {
   const { name, partitionKeyName, sortKeyName } = gsiOptions;
 
-  return (key: GSIPK, options: QueryOptions<Attributes, GSISK> = {}) => {
+  return (key, options = {}) => {
     const keyOptions = {
       [partitionKeyName]: key,
 
@@ -43,7 +52,7 @@ export const createQueryItems = <
       options.filterOptions
     );
 
-    return queryItems<Attributes>(tablename, {
+    return queryItems(tablename, {
       ...options.dynamodbOptions,
       ...queryOptions,
     });
