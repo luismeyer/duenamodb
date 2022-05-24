@@ -5,7 +5,7 @@ import { DynamoTypes, PK } from './types';
 
 export type DeleteItemFunction<PartitionKey extends PK> = (
   key: PartitionKey,
-  options?: Omit<DocumentClient.GetItemInput, 'TableName' | 'Key'>
+  options?: Omit<DocumentClient.DeleteItemInput, 'TableName' | 'Key'>
 ) => Promise<boolean>;
 
 /**
@@ -34,7 +34,7 @@ export const createDeleteItem = <
 export const deleteItem = async <T>(
   tablename: string,
   key: DocumentClient.Key,
-  options: Omit<DocumentClient.GetItemInput, 'TableName' | 'Key'>
+  options: Omit<DocumentClient.DeleteItemInput, 'TableName' | 'Key'>
 ): Promise<boolean> => {
   const res = await DDBClient.instance
     .delete({ ...options, TableName: tablename, Key: key })
