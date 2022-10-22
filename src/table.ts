@@ -18,16 +18,16 @@ export const createTableFunctions = <
   tablename: string,
   partitionKeyName: string
 ) => {
-  const scanItems = createScanItems<Attributes>(tablename);
-
   const putItem = createPutItem<Attributes>(tablename);
-
-  const updateItem = createUpdateItem<Attributes>(tablename, partitionKeyName);
 
   const getItem = createGetItem<Attributes, PartitionKey>(
     tablename,
     partitionKeyName
   );
+
+  const updateItem = createUpdateItem<Attributes>(tablename, partitionKeyName);
+
+  const scanItems = createScanItems<Attributes>(tablename);
 
   const deleteItem = createDeleteItem<Attributes, PartitionKey>(
     tablename,

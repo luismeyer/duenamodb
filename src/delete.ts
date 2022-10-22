@@ -9,7 +9,7 @@ export type DeleteItemFunction<PartitionKey extends PK> = (
 ) => Promise<boolean>;
 
 /**
- * Delete Function that removes item from ddb table
+ * Setup delete Function that removes item from ddb table
  * @param tablename Tablename
  * @param partitionKeyName Name of the Partitionkey
  * @returns Boolean indicating success
@@ -27,7 +27,7 @@ export const createDeleteItem = <
 
 /**
  * Delete an item from the DB.
- * @param tablename Name of DDB table
+ * @param tablename Tablename
  * @param key Identifier of the DDB item
  * @returns Boolean indicating success
  */

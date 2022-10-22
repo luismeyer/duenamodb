@@ -42,7 +42,7 @@ const putItem = createPutItem<Attributes>(tableName);
 Get item:
 
 ```ts
-const getItem = createGetItem<Attributes, string>(tableName, 'id');
+const getItem = createGetItem<Attributes, string>(tableName, partitionKeyName);
 ```
 
 Update item:
@@ -61,15 +61,29 @@ Query items:
 
 ```ts
 const queryItems = createQueryItems<Attributes, number>(tableName, {
-  name: indexName,
-  partitionKeyName: 'name',
+  name,
+  partitionKeyName,
 });
 ```
 
 Delete item:
 
 ```ts
-const deleteItem = createDeleteItem<Attributes, string>(tablename, 'id');
+const deleteItem = createDeleteItem<Attributes, string>(
+  tablename,
+  partitionKeyName
+);
+```
+
+### Utilites
+
+There is also a utility function that creates the scan, put, update, get and delete function.
+
+```ts
+const { getItem, scanItems, updateItem } = createTableFunctions<
+  Attributes,
+  string
+>(tablename, partitionKeyName);
 ```
 
 ### Use the Functions 👷‍♀️

@@ -9,7 +9,7 @@ export const shorthand = async (tablename: string) => {
   >(tablename, 'id');
 
   const scanResult = await scanItems();
-  console.log('Shorthand, Scane Result: ', scanResult);
+  console.log('Shorthand, Scan Result: ', scanResult);
 
   const getResult = await getItem('1');
   console.log('Shorthand, Get Result: ', getResult);
