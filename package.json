@@ -1,9 +1,6 @@
 {
   "name": "duenamodb",
   "version": "1.3.2",
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
-  "license": "MIT",
   "keywords": [
     "DynamoDB",
     "DDB",
@@ -11,15 +8,31 @@
     "DynamoDB Client",
     "Amazon DynamoDB"
   ],
+  "license": "MIT",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "scripts": {
-    "watch": "tsc -w",
     "build": "tsc",
-    "pretest": "ts-node scripts/setup-db",
-    "posttest": "ts-node scripts/stop-db",
-    "test": "ava",
+    "bump": "ts-node scripts/update-version",
     "prettier": "prettier --check .",
     "prettier:write": "prettier --write .",
-    "bump": "ts-node scripts/update-version"
+    "pretest": "ts-node scripts/setup-db",
+    "test": "ava",
+    "posttest": "ts-node scripts/stop-db",
+    "watch": "tsc -w"
+  },
+  "ava": {
+    "extensions": [
+      "ts"
+    ],
+    "files": [
+      "test/**/*",
+      "!test/helper/**/*"
+    ],
+    "require": [
+      "ts-node/register"
+    ],
+    "timeout": "1m"
   },
   "dependencies": {
     "aws-sdk": "^2.1120.0"
@@ -33,19 +46,6 @@
     "prettier": "2.6.1",
     "ts-node": "^10.7.0",
     "typescript": "^4.5.5"
-  },
-  "ava": {
-    "timeout": "1m",
-    "files": [
-      "test/**/*",
-      "!test/helper/**/*"
-    ],
-    "extensions": [
-      "ts"
-    ],
-    "require": [
-      "ts-node/register"
-    ]
   },
   "test": {
     "dbPort": 8000,

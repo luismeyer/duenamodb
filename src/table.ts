@@ -1,9 +1,9 @@
+import { createDeleteItem } from './delete';
 import { createGetItem } from './get';
 import { createPutItem } from './put';
 import { createScanItems } from './scan';
 import { DynamoTypes, PK } from './types';
 import { createUpdateItem } from './update';
-import { createDeleteItem } from './delete';
 
 /**
  * Creates functions for the ddb table
