@@ -5,7 +5,7 @@ import {
 import { convertToAttr } from '@aws-sdk/util-dynamodb';
 
 import { DDBClient } from './client';
-import { DynamoTypes, PK } from './types';
+import { DynamoDBTypes, PK } from './types';
 
 type DeleteItemOptions = Omit<DeleteItemCommandInput, 'TableName' | 'Key'>;
 
@@ -21,7 +21,7 @@ export type DeleteItemFunction<PartitionKey extends PK> = (
  * @returns Boolean indicating success
  */
 export const createDeleteItem = <
-  Attributes extends Record<string, DynamoTypes>,
+  Attributes extends DynamoDBTypes,
   PartitionKey extends PK
 >(
   tablename: string,

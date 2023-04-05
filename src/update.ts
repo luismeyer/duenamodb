@@ -12,7 +12,7 @@ import {
   expressionAttributeValues,
 } from './expression';
 import { Keys } from './object';
-import { DynamoTypes } from './types';
+import { DynamoDBTypes } from './types';
 
 type DynamoDBOptions = Omit<UpdateItemCommandInput, 'TableName'>;
 
@@ -22,20 +22,17 @@ export type UpdateItemOptions<T> = {
   dynamodbOptions?: DynamoDBOptions;
 };
 
-export type UpdateItemFunction<Attributes extends Record<string, DynamoTypes>> =
-  (
-    item: Attributes,
-    options: UpdateItemOptions<Attributes>
-  ) => Promise<Attributes | undefined>;
+export type UpdateItemFunction<Attributes extends DynamoDBTypes> = (
+  item: Attributes,
+  options: UpdateItemOptions<Attributes>
+) => Promise<Attributes | undefined>;
 
 /**
  * Create util function that updates item in DB
  * @param tablename Tablename
  * @returns Function to update item
  */
-export const createUpdateItem = <
-  Attributes extends Record<string, DynamoTypes>
->(
+export const createUpdateItem = <Attributes extends DynamoDBTypes>(
   tablename: string,
   partitionKeyName: keyof Attributes
 ): UpdateItemFunction<Attributes> => {
@@ -103,9 +100,7 @@ export const createRemoveExpression = (keys: string[]): string | undefined => {
  * @param options The keys to update and remove
  * @returns Update options
  */
-export const createUpdateOptions = <
-  Attributes extends Record<string, DynamoTypes>
->(
+export const createUpdateOptions = <Attributes extends DynamoDBTypes>(
   partitionKeyName: keyof Attributes,
   updatedObject: Attributes,
   options: UpdateItemOptions<Attributes>

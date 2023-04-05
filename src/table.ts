@@ -2,7 +2,7 @@ import { createDeleteItem } from './delete';
 import { createGetItem } from './get';
 import { createPutItem } from './put';
 import { createScanItems } from './scan';
-import { DynamoTypes, PK } from './types';
+import { DynamoDBTypes, PK } from './types';
 import { createUpdateItem } from './update';
 
 /**
@@ -12,7 +12,7 @@ import { createUpdateItem } from './update';
  * @returns DDB functions
  */
 export const createTableFunctions = <
-  Attributes extends Record<string, DynamoTypes>,
+  Attributes extends DynamoDBTypes,
   PartitionKey extends PK
 >(
   tablename: string,

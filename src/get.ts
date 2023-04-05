@@ -2,12 +2,12 @@ import { GetItemCommand, GetItemCommandInput } from '@aws-sdk/client-dynamodb';
 import { convertToAttr, unmarshall } from '@aws-sdk/util-dynamodb';
 
 import { DDBClient } from './client';
-import { DynamoTypes, PK } from './types';
+import { DynamoDBTypes, PK } from './types';
 
 type GetItemOptions = Omit<GetItemCommandInput, 'TableName' | 'Key'>;
 
 export type GetItemFunction<
-  Attributes extends Record<string, DynamoTypes>,
+  Attributes extends DynamoDBTypes,
   PartitionKey extends PK
 > = (
   key: PartitionKey,
@@ -21,7 +21,7 @@ export type GetItemFunction<
  * @returns Function that gets item
  */
 export const createGetItem = <
-  Attributes extends Record<string, DynamoTypes>,
+  Attributes extends DynamoDBTypes,
   PartitionKey extends PK
 >(
   tablename: string,

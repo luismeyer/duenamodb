@@ -20,7 +20,7 @@ export const manual = async (tablename: string, indexname: string) => {
   const scanUsers = createScanItems<Attributes>(tablename);
 
   const scanResult = await scanUsers();
-  console.log('Scane Result: ', scanResult);
+  console.log('Scan Result: ', scanResult);
 
   const getResult = await getUser('1');
   console.log('Get Result: ', getResult);

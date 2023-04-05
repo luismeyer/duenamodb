@@ -4,21 +4,18 @@ import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
 import { DDBClient } from './client';
 import { createConditionExpression } from './expression';
 import { maybeMerge } from './object';
-import { DynamoTypes, GSI, PK } from './types';
+import { DynamoDBTypes, GSI, PK } from './types';
 
 type QueryDynamoDBOptions = Omit<QueryCommandInput, 'TableName'>;
 
-export type QueryOptions<
-  Attributes extends Record<string, DynamoTypes>,
-  GSISK extends PK
-> = {
+export type QueryOptions<Attributes extends DynamoDBTypes, GSISK extends PK> = {
   sortKey?: GSISK;
   filterOptions?: Partial<Attributes>;
   dynamodbOptions?: QueryDynamoDBOptions;
 };
 
 export type QueryItemsFunction<
-  Attributes extends Record<string, DynamoTypes>,
+  Attributes extends DynamoDBTypes,
   GSIPK extends PK,
   GSISK extends PK = string
 > = (
@@ -33,7 +30,7 @@ export type QueryItemsFunction<
  * @returns Function to query table
  */
 export const createQueryItems = <
-  Attributes extends Record<string, DynamoTypes>,
+  Attributes extends DynamoDBTypes,
   GSIPK extends PK,
   GSISK extends PK = string
 >(

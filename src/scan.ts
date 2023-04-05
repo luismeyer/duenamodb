@@ -3,24 +3,25 @@ import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
 
 import { DDBClient } from './client';
 import { createConditionExpression } from './expression';
-import { DynamoTypes } from './types';
+import { DynamoDBTypes } from './types';
 
 type DynamoDBOptions = Omit<ScanCommandInput, 'TableName'>;
 
-export type ScanOptions<Attributes extends Record<string, DynamoTypes>> = {
+export type ScanOptions<Attributes extends DynamoDBTypes> = {
   filterOptions?: Partial<Attributes>;
   dynamodbOptions?: DynamoDBOptions;
 };
 
-export type ScanItemsFunction<Attributes extends Record<string, DynamoTypes>> =
-  (options?: ScanOptions<Attributes>) => Promise<Attributes[]>;
+export type ScanItemsFunction<Attributes extends DynamoDBTypes> = (
+  options?: ScanOptions<Attributes>
+) => Promise<Attributes[]>;
 
 /**
  * Create Function that scan items from ddb table
  * @param tablename Tablename
  * @returns Function that scans table
  */
-export const createScanItems = <Attributes extends Record<string, DynamoTypes>>(
+export const createScanItems = <Attributes extends DynamoDBTypes>(
   tablename: string
 ): ScanItemsFunction<Attributes> => {
   return (options = {}) => {
@@ -53,7 +54,7 @@ export const createScanOptions = <A>(
   } = createConditionExpression(filterOptions);
 
   return {
-    ExpressionAttributeValues: marshall({ ...filterValues }),
+    ExpressionAttributeValues: { ...marshall(filterValues) },
     ExpressionAttributeNames: { ...filterNames },
     FilterExpression: filterExpression,
   };

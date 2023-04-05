@@ -2,11 +2,11 @@ import { PutItemCommand, PutItemCommandInput } from '@aws-sdk/client-dynamodb';
 import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
 
 import { DDBClient } from './client';
-import { DynamoTypes } from './types';
+import { DynamoDBTypes } from './types';
 
 type PutItemOptions = Omit<PutItemCommandInput, 'TableName' | 'Item'>;
 
-export type PutItemFunction<Attributes extends Record<string, DynamoTypes>> = (
+export type PutItemFunction<Attributes extends DynamoDBTypes> = (
   item: Attributes,
   options?: PutItemOptions
 ) => Promise<Attributes>;
@@ -16,7 +16,7 @@ export type PutItemFunction<Attributes extends Record<string, DynamoTypes>> = (
  * @param tablename Tablename
  * @returns Function that puts item
  */
-export const createPutItem = <Attributes extends Record<string, DynamoTypes>>(
+export const createPutItem = <Attributes extends DynamoDBTypes>(
   tablename: string
 ): PutItemFunction<Attributes> => {
   return (item, options = {}) => putItem(tablename, marshall(item), options);

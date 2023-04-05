@@ -14,6 +14,10 @@ export const shorthand = async (tablename: string) => {
   const getResult = await getItem('1');
   console.log('Shorthand, Get Result: ', getResult);
 
+  if (!getResult) {
+    return;
+  }
+
   const updateResult = await updateItem(
     { ...getResult, name: 'TestName' },
     { updateKeys: ['name'] }
