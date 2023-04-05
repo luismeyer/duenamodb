@@ -1,9 +1,12 @@
-import { DocumentClient } from 'aws-sdk/clients/dynamodb';
+import { QueryCommand, QueryCommandInput } from '@aws-sdk/client-dynamodb';
+import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
 
 import { DDBClient } from './client';
 import { createConditionExpression } from './expression';
 import { maybeMerge } from './object';
 import { DynamoTypes, GSI, PK } from './types';
+
+type QueryDynamoDBOptions = Omit<QueryCommandInput, 'TableName'>;
 
 export type QueryOptions<
   Attributes extends Record<string, DynamoTypes>,
@@ -11,7 +14,7 @@ export type QueryOptions<
 > = {
   sortKey?: GSISK;
   filterOptions?: Partial<Attributes>;
-  dynamodbOptions?: Omit<DocumentClient.QueryInput, 'TableName'>;
+  dynamodbOptions?: QueryDynamoDBOptions;
 };
 
 export type QueryItemsFunction<
@@ -70,7 +73,7 @@ export const createQueryOptions = <A>(
   index: string,
   keyOptions: Partial<A>,
   filterOptions: Partial<A> = {}
-): Partial<DocumentClient.QueryInput> => {
+): Partial<QueryDynamoDBOptions> => {
   // DDB key/index condition structs
   const {
     attributeNames: keyNames,
@@ -87,7 +90,7 @@ export const createQueryOptions = <A>(
 
   return {
     IndexName: index,
-    ExpressionAttributeValues: { ...keyValues, ...filterValues },
+    ExpressionAttributeValues: marshall({ ...keyValues, ...filterValues }),
     ExpressionAttributeNames: { ...keyNames, ...filterNames },
     KeyConditionExpression: keyExpression,
 
@@ -104,14 +107,17 @@ export const createQueryOptions = <A>(
  */
 export const queryItems = async <T>(
   tablename: string,
-  options: Omit<DocumentClient.QueryInput, 'TableName'>
+  options: QueryDynamoDBOptions
 ): Promise<T[]> => {
-  const res = await DDBClient.instance
-    .query({ ...options, TableName: tablename })
-    .promise();
+  const command = new QueryCommand({
+    ...options,
+    TableName: tablename,
+  });
 
-  if (res.$response.error) {
-    throw res.$response.error;
+  const res = await DDBClient.instance.send(command);
+
+  if (res.$metadata.httpStatusCode !== 200) {
+    throw res;
   }
 
   if (!res.Items) {
@@ -126,5 +132,5 @@ export const queryItems = async <T>(
       })
     : [];
 
-  return [...paginatedResults, ...res.Items] as T[];
+  return [...paginatedResults, ...res.Items.map(item => unmarshall(item) as T)];
 };

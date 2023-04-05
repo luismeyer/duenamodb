@@ -6,4 +6,4 @@ export type GSI<Attributes extends Record<string, DynamoTypes>> = {
 
 export type PK = string | number;
 
-export type DynamoTypes = string | number | boolean | Record<string, any>;
+export type DynamoTypes = string | number | boolean | Record<string, unknown>;

@@ -1,11 +1,14 @@
-import { DocumentClient } from 'aws-sdk/clients/dynamodb';
+import { PutItemCommand, PutItemCommandInput } from '@aws-sdk/client-dynamodb';
+import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
 
 import { DDBClient } from './client';
 import { DynamoTypes } from './types';
 
+type PutItemOptions = Omit<PutItemCommandInput, 'TableName' | 'Item'>;
+
 export type PutItemFunction<Attributes extends Record<string, DynamoTypes>> = (
   item: Attributes,
-  options?: Omit<DocumentClient.PutItemInput, 'TableName' | 'Item'>
+  options?: PutItemOptions
 ) => Promise<Attributes>;
 
 /**
@@ -16,7 +19,7 @@ export type PutItemFunction<Attributes extends Record<string, DynamoTypes>> = (
 export const createPutItem = <Attributes extends Record<string, DynamoTypes>>(
   tablename: string
 ): PutItemFunction<Attributes> => {
-  return (item, options = {}) => putItem(tablename, item, options);
+  return (item, options = {}) => putItem(tablename, marshall(item), options);
 };
 
 /**
@@ -28,16 +31,24 @@ export const createPutItem = <Attributes extends Record<string, DynamoTypes>>(
  */
 export const putItem = async <T>(
   tableName: string,
-  input: DocumentClient.PutItemInputAttributeMap,
-  options: Omit<DocumentClient.PutItemInput, 'TableName' | 'Item'>
+  input: PutItemCommandInput['Item'],
+  options: PutItemOptions
 ): Promise<T> => {
-  const res = await DDBClient.instance
-    .put({ TableName: tableName, Item: input, ...options })
-    .promise();
-
-  if (res.$response.error) {
-    throw res.$response.error;
+  if (!input) {
+    throw new Error('Missing put item input');
   }
 
-  return input as T;
+  const command = new PutItemCommand({
+    ...options,
+    Item: input,
+    TableName: tableName,
+  });
+
+  const res = await DDBClient.instance.send(command);
+
+  if (res.$metadata.httpStatusCode !== 200) {
+    throw res;
+  }
+
+  return unmarshall(input) as T;
 };

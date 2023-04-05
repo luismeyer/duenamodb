@@ -1,11 +1,17 @@
-import { DocumentClient } from 'aws-sdk/clients/dynamodb';
+import {
+  DeleteItemCommand,
+  DeleteItemCommandInput,
+} from '@aws-sdk/client-dynamodb';
+import { convertToAttr } from '@aws-sdk/util-dynamodb';
 
 import { DDBClient } from './client';
 import { DynamoTypes, PK } from './types';
 
+type DeleteItemOptions = Omit<DeleteItemCommandInput, 'TableName' | 'Key'>;
+
 export type DeleteItemFunction<PartitionKey extends PK> = (
   key: PartitionKey,
-  options?: Omit<DocumentClient.DeleteItemInput, 'TableName' | 'Key'>
+  options?: DeleteItemOptions
 ) => Promise<boolean>;
 
 /**
@@ -22,7 +28,7 @@ export const createDeleteItem = <
   partitionKeyName: keyof Attributes
 ): DeleteItemFunction<PartitionKey> => {
   return (key, options = {}) =>
-    deleteItem(tablename, { [partitionKeyName]: key }, options);
+    deleteItem(tablename, { [partitionKeyName]: convertToAttr(key) }, options);
 };
 
 /**
@@ -33,14 +39,18 @@ export const createDeleteItem = <
  */
 export const deleteItem = async <T>(
   tablename: string,
-  key: DocumentClient.Key,
-  options: Omit<DocumentClient.DeleteItemInput, 'TableName' | 'Key'>
+  key: DeleteItemCommandInput['Key'],
+  options: DeleteItemOptions
 ): Promise<boolean> => {
-  const res = await DDBClient.instance
-    .delete({ ...options, TableName: tablename, Key: key })
-    .promise();
+  const command = new DeleteItemCommand({
+    ...options,
+    Key: key,
+    TableName: tablename,
+  });
 
-  if (res.$response.error) {
+  const res = await DDBClient.instance.send(command);
+
+  if (res.$metadata.httpStatusCode !== 200) {
     return false;
   }
 

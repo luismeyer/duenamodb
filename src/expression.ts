@@ -86,7 +86,7 @@ export const conditionExpression = (keys: string[]): string | undefined => {
  * @param object Input for condition expression
  * @returns AttributeName, AttributeValues, Expression
  */
-export const createConditionExpression = <T>(object: T) => {
+export const createConditionExpression = <T extends {}>(object: T) => {
   const keys = Object.keys(object) as Keys<T>;
 
   const attributeValues = expressionAttributeValues(object, keys);

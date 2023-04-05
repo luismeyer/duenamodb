@@ -1,14 +1,17 @@
-import { DocumentClient } from 'aws-sdk/clients/dynamodb';
+import { GetItemCommand, GetItemCommandInput } from '@aws-sdk/client-dynamodb';
+import { convertToAttr, unmarshall } from '@aws-sdk/util-dynamodb';
 
 import { DDBClient } from './client';
 import { DynamoTypes, PK } from './types';
+
+type GetItemOptions = Omit<GetItemCommandInput, 'TableName' | 'Key'>;
 
 export type GetItemFunction<
   Attributes extends Record<string, DynamoTypes>,
   PartitionKey extends PK
 > = (
   key: PartitionKey,
-  options?: Omit<DocumentClient.GetItemInput, 'TableName' | 'Key'>
+  options?: GetItemOptions
 ) => Promise<Attributes | undefined>;
 
 /**
@@ -25,7 +28,7 @@ export const createGetItem = <
   partitionKeyName: keyof Attributes
 ): GetItemFunction<Attributes, PartitionKey> => {
   return (key, options = {}) =>
-    getItem(tablename, { [partitionKeyName]: key }, options);
+    getItem(tablename, { [partitionKeyName]: convertToAttr(key) }, options);
 };
 
 /**
@@ -37,20 +40,20 @@ export const createGetItem = <
  */
 export const getItem = async <T>(
   tablename: string,
-  key: DocumentClient.Key,
-  options: Omit<DocumentClient.GetItemInput, 'TableName' | 'Key'>
+  key: GetItemCommandInput['Key'],
+  options: GetItemOptions
 ): Promise<T | undefined> => {
-  const res = await DDBClient.instance
-    .get({ ...options, TableName: tablename, Key: key })
-    .promise();
+  const command = new GetItemCommand({
+    ...options,
+    Key: key,
+    TableName: tablename,
+  });
 
-  if (res.$response.error) {
-    throw res.$response.error;
-  }
+  const res = await DDBClient.instance.send(command);
 
   if (!res.Item) {
     return undefined;
   }
 
-  return res.Item as T;
+  return unmarshall(res.Item) as T;
 };

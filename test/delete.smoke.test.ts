@@ -1,8 +1,10 @@
 import test from 'ava';
 
-import { createDeleteItem, DDBClient } from '../src';
+import { GetItemCommand, PutItemCommand } from '@aws-sdk/client-dynamodb';
+import { convertToAttr, marshall } from '@aws-sdk/util-dynamodb';
 
-import { Attributes, setupDB, tablename, createAttributes } from './helper/db';
+import { createDeleteItem, DDBClient } from '../src';
+import { Attributes, createAttributes, setupDB, tablename } from './helper/db';
 
 test.serial.before(async () => {
   setupDB();
@@ -13,17 +15,20 @@ test.serial('Delete removes Item', async t => {
 
   const attributes = createAttributes();
 
-  await DDBClient.instance
-    .put({ TableName: tablename, Item: attributes })
-    .promise();
+  await DDBClient.instance.send(
+    new PutItemCommand({ TableName: tablename, Item: marshall(attributes) })
+  );
 
   const success = await deleteItem(attributes.id);
 
   t.true(success);
 
-  const { Item } = await DDBClient.instance
-    .get({ TableName: tablename, Key: { id: attributes.id } })
-    .promise();
+  const { Item } = await DDBClient.instance.send(
+    new GetItemCommand({
+      TableName: tablename,
+      Key: { id: convertToAttr(attributes.id) },
+    })
+  );
 
   t.falsy(Item);
 });

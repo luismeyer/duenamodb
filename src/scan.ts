@@ -1,12 +1,15 @@
-import { DocumentClient } from 'aws-sdk/clients/dynamodb';
+import { ScanCommand, ScanCommandInput } from '@aws-sdk/client-dynamodb';
+import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
 
 import { DDBClient } from './client';
 import { createConditionExpression } from './expression';
 import { DynamoTypes } from './types';
 
+type DynamoDBOptions = Omit<ScanCommandInput, 'TableName'>;
+
 export type ScanOptions<Attributes extends Record<string, DynamoTypes>> = {
   filterOptions?: Partial<Attributes>;
-  dynamodbOptions?: Omit<DocumentClient.ScanInput, 'TableName'>;
+  dynamodbOptions?: DynamoDBOptions;
 };
 
 export type ScanItemsFunction<Attributes extends Record<string, DynamoTypes>> =
@@ -37,7 +40,7 @@ export const createScanItems = <Attributes extends Record<string, DynamoTypes>>(
  */
 export const createScanOptions = <A>(
   filterOptions: Partial<A> = {}
-): Partial<DocumentClient.ScanInput> => {
+): Partial<DynamoDBOptions> => {
   if (Object.keys(filterOptions).length === 0) {
     return {};
   }
@@ -50,7 +53,7 @@ export const createScanOptions = <A>(
   } = createConditionExpression(filterOptions);
 
   return {
-    ExpressionAttributeValues: { ...filterValues },
+    ExpressionAttributeValues: marshall({ ...filterValues }),
     ExpressionAttributeNames: { ...filterNames },
     FilterExpression: filterExpression,
   };
@@ -63,19 +66,30 @@ export const createScanOptions = <A>(
  */
 export const scanItems = async <T>(
   tablename: string,
-  options: Omit<DocumentClient.ScanInput, 'TableName'>
+  options: DynamoDBOptions
 ): Promise<T[]> => {
-  const res = await DDBClient.instance
-    .scan({ ...options, TableName: tablename })
-    .promise();
+  const command = new ScanCommand({
+    ...options,
+    TableName: tablename,
+  });
 
-  if (res.$response.error) {
-    throw res.$response.error;
+  const res = await DDBClient.instance.send(command);
+
+  if (res.$metadata.httpStatusCode !== 200) {
+    throw res;
   }
 
   if (!res.Items) {
     return [];
   }
 
-  return res.Items as T[];
+  // query the database until 'LastEvaluatedKey' is empty
+  const paginatedResults = res.LastEvaluatedKey
+    ? await scanItems<T>(tablename, {
+        ...options,
+        ExclusiveStartKey: res.LastEvaluatedKey,
+      })
+    : [];
+
+  return [...paginatedResults, ...res.Items.map(item => unmarshall(item) as T)];
 };

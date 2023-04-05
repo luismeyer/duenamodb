@@ -3,6 +3,11 @@ import { launch } from 'dynamodb-local';
 import find from 'find-process';
 import util from 'util';
 
+import {
+  CreateTableCommand,
+  ListTablesCommand,
+} from '@aws-sdk/client-dynamodb';
+
 import { test } from '../package.json';
 import { DDBClient } from '../src';
 
@@ -22,9 +27,8 @@ find('port', dbPort)
     );
 
     if (dynamoProcess) {
-      const tableExists = await DDBClient.dynamoDB
-        .listTables()
-        .promise()
+      const tableExists = await DDBClient.instance
+        .send(new ListTablesCommand({}))
         .then(tables => tables.TableNames?.some(n => n === tablename));
 
       if (tableExists) {
@@ -36,11 +40,15 @@ find('port', dbPort)
     }
 
     console.log('Starting DynamoDB Local...');
-    return launch(dbPort, null, [], false, true).then(() => {
+    return launch(dbPort, null, [], false, true).then(async () => {
+      console.log('Waiting for DynamoDB Local to start...');
+
+      await new Promise(resolve => setTimeout(resolve, 5000));
+
       console.log('Creating Test Table...');
 
-      return DDBClient.dynamoDB
-        .createTable({
+      return DDBClient.instance.send(
+        new CreateTableCommand({
           TableName: tablename,
           KeySchema: [{ AttributeName: 'id', KeyType: 'HASH' }],
           ProvisionedThroughput: {
@@ -63,7 +71,7 @@ find('port', dbPort)
             },
           ],
         })
-        .promise();
+      );
     });
   })
   .then(() => {

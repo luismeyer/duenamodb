@@ -1,4 +1,8 @@
-import { DocumentClient } from 'aws-sdk/clients/dynamodb';
+import {
+  UpdateItemCommand,
+  UpdateItemCommandInput,
+} from '@aws-sdk/client-dynamodb';
+import { convertToAttr, marshall } from '@aws-sdk/util-dynamodb';
 
 import { DDBClient } from './client';
 import {
@@ -10,10 +14,12 @@ import {
 import { Keys } from './object';
 import { DynamoTypes } from './types';
 
+type DynamoDBOptions = Omit<UpdateItemCommandInput, 'TableName'>;
+
 export type UpdateItemOptions<T> = {
   updateKeys?: Keys<T>;
   removeKeys?: Keys<T>;
-  dynamodbOptions?: Omit<DocumentClient.UpdateItemInput, 'TableName'>;
+  dynamodbOptions?: DynamoDBOptions;
 };
 
 export type UpdateItemFunction<Attributes extends Record<string, DynamoTypes>> =
@@ -103,7 +109,7 @@ export const createUpdateOptions = <
   partitionKeyName: keyof Attributes,
   updatedObject: Attributes,
   options: UpdateItemOptions<Attributes>
-): Omit<DocumentClient.UpdateItemInput, 'TableName'> | undefined => {
+): DynamoDBOptions | undefined => {
   if (!options.removeKeys && !options.updateKeys) {
     return;
   }
@@ -121,9 +127,8 @@ export const createUpdateOptions = <
   const ExpressionAttributeValues =
     updateKeys.length > 0
       ? {
-          ExpressionAttributeValues: expressionAttributeValues(
-            updatedObject,
-            updateKeys
+          ExpressionAttributeValues: marshall(
+            expressionAttributeValues(updatedObject, updateKeys)
           ),
         }
       : {};
@@ -134,8 +139,10 @@ export const createUpdateOptions = <
   // the remove update expression creates Remove #attributeNames, ...
   const RemoveUpdateExpression = createRemoveExpression(removeKeys) ?? '';
 
+  const key = updatedObject[partitionKeyName];
+
   return {
-    Key: { [partitionKeyName]: updatedObject[partitionKeyName] },
+    Key: { [partitionKeyName]: convertToAttr(key) },
     ExpressionAttributeNames,
     UpdateExpression: `${UpdateUpdateExpression} ${RemoveUpdateExpression}`,
     ...ExpressionAttributeValues,
@@ -150,17 +157,17 @@ export const createUpdateOptions = <
  */
 export const updateItem = async (
   tableName: string,
-  input: Omit<DocumentClient.UpdateItemInput, 'TableName'>
+  input: DynamoDBOptions
 ): Promise<boolean> => {
-  const res = await DDBClient.instance
-    .update({
-      TableName: tableName,
-      ...input,
-    })
-    .promise();
+  const command = new UpdateItemCommand({
+    ...input,
+    TableName: tableName,
+  });
 
-  if (res.$response.error) {
-    throw new Error('Error updating into DB');
+  const res = await DDBClient.instance.send(command);
+
+  if (res.$metadata.httpStatusCode !== 200) {
+    throw res;
   }
 
   return true;
