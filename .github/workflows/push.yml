@@ -19,11 +19,14 @@ jobs:
         with:
           node-version: '16.x'
 
-      - name: 📥 Download deps
-        run: yarn
+      - uses: pnpm/action-setup@v2
+        name: 📥 Download deps
+        with:
+          version: 8
+          run_install: true
 
       - name: 🧪 Test
-        run: yarn test
+        run: pnpm test
         env:
           AWS_ACCESS_KEY_ID: 'test'
           AWS_SECRET_ACCESS_KEY: 'test'
@@ -43,11 +46,14 @@ jobs:
         with:
           node-version: '16.x'
 
-      - name: 📥 Download deps
-        run: yarn
+      - uses: pnpm/action-setup@v2
+        name: 📥 Download deps
+        with:
+          version: 8
+          run_install: true
 
       - name: 🏗 Build
-        run: yarn build
+        run: pnpm build
 
   prettier:
     name: 🪞 Prettier
@@ -64,11 +70,14 @@ jobs:
         with:
           node-version: '16.x'
 
-      - name: 📥 Download deps
-        run: yarn
+      - uses: pnpm/action-setup@v2
+        name: 📥 Download deps
+        with:
+          version: 8
+          run_install: true
 
       - name: 🏗 Prettier
-        run: yarn prettier
+        run: pnpm prettier
 
   bump:
     name: ⬆️ Bump Version

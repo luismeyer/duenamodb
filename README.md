@@ -7,7 +7,7 @@ Simple DynamoDB client written in TypeScript.
 Install the package
 
 ```bash
-yarn add duenamodb
+pnpm install duenamodb
 ```
 
 ```bash
