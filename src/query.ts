@@ -2,7 +2,7 @@ import { QueryCommand, QueryCommandInput } from '@aws-sdk/client-dynamodb';
 import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
 
 import { DDBClient } from './client';
-import { createConditionExpression } from './expression';
+import { createConditionExpression, FilterOptions } from './expression';
 import { maybeMerge } from './object';
 import { DynamoDBTypes, GSI, PK } from './types';
 
@@ -10,7 +10,7 @@ type QueryDynamoDBOptions = Omit<QueryCommandInput, 'TableName'>;
 
 export type QueryOptions<Attributes extends DynamoDBTypes, GSISK extends PK> = {
   sortKey?: GSISK;
-  filterOptions?: Partial<Attributes>;
+  filterOptions?: FilterOptions<Attributes>;
   dynamodbOptions?: QueryDynamoDBOptions;
 };
 
@@ -66,10 +66,10 @@ export const createQueryItems = <
  * @param filterOptions Keys and values to filter after the query
  * @returns Query Options
  */
-export const createQueryOptions = <A>(
+export const createQueryOptions = <Attributes extends DynamoDBTypes>(
   index: string,
-  keyOptions: Partial<A>,
-  filterOptions: Partial<A> = {}
+  keyOptions: Partial<Attributes>,
+  filterOptions?: FilterOptions<Attributes>
 ): Partial<QueryDynamoDBOptions> => {
   // DDB key/index condition structs
   const {
@@ -83,7 +83,7 @@ export const createQueryOptions = <A>(
     attributeNames: filterNames,
     attributeValues: filterValues,
     expression: filterExpression,
-  } = createConditionExpression(filterOptions);
+  } = createConditionExpression(filterOptions ?? {});
 
   return {
     IndexName: index,

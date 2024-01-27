@@ -123,7 +123,12 @@ export const createUpdateOptions = <Attributes extends DynamoDBTypes>(
     updateKeys.length > 0
       ? {
           ExpressionAttributeValues: marshall(
-            expressionAttributeValues(updatedObject, updateKeys)
+            expressionAttributeValues(
+              updateKeys.reduce(
+                (acc, key) => ({ ...acc, [key]: updatedObject[key] }),
+                {}
+              )
+            )
           ),
         }
       : {};

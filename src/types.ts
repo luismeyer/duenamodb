@@ -8,4 +8,4 @@ export type GSI<Attributes extends DynamoDBTypes> = {
 
 export type PK = string | number;
 
-export type DynamoDBTypes = Record<string, NativeAttributeValue>;
+export type DynamoDBTypes = { [key: string]: NativeAttributeValue };

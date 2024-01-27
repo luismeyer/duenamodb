@@ -14,7 +14,9 @@ const name = randomNumber() + 'foobar';
 
 test.serial.before(async () => {
   setupDB();
+});
 
+test.serial('Scan fetches Items', async t => {
   for (let id = 0; id < itemsCount; id++) {
     const attributes = createAttributes({ name });
 
@@ -22,9 +24,7 @@ test.serial.before(async () => {
       new PutItemCommand({ TableName: tablename, Item: marshall(attributes) })
     );
   }
-});
 
-test.serial('Scan fetches Items', async t => {
   const result = await DDBClient.instance.send(
     new ScanCommand({ TableName: tablename })
   );
@@ -43,11 +43,4 @@ test.serial('Scan fetches Items', async t => {
 
   t.assert(filteredItems);
   t.is(filteredItems.length, filteredResult.length);
-});
-
-test.serial('Scan filters items', async t => {
-  const items = await scan({ filterOptions: { name } });
-
-  t.assert(items);
-  t.is(items.length, itemsCount);
 });

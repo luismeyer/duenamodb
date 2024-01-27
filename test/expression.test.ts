@@ -6,6 +6,8 @@ import {
   expressionAttributeValueKey,
   expressionAttributeValues,
   conditionExpression,
+  NOT,
+  IN,
 } from '../src';
 
 test('Expression-Attribute-Name-Key includes key value', t => {
@@ -45,16 +47,17 @@ test('Expression-Attribute-Names creates correct amount of entries', t => {
 });
 
 test('Expression-Attribute-Values creates correct mapping', t => {
-  const values = expressionAttributeValues({ foo: 'bar' }, ['foo']);
+  const values = expressionAttributeValues({ foo: 'bar' });
 
   t.deepEqual(values, { ':foo': 'bar' });
 });
 
 test('Expression-Attribute-Value creates correct amount of entries', t => {
-  const values = expressionAttributeValues(
-    { foo: 'bar', bar: 'foo', hello: 'world' },
-    ['foo', 'bar', 'hello']
-  );
+  const values = expressionAttributeValues({
+    foo: 'bar',
+    bar: 'foo',
+    hello: 'world',
+  });
 
   t.deepEqual(values, {
     ':foo': 'bar',
@@ -63,17 +66,57 @@ test('Expression-Attribute-Value creates correct amount of entries', t => {
   });
 });
 
+test('Expression-Attribute-Value handles duenamo expression NOT', t => {
+  const values = expressionAttributeValues({
+    foo: NOT('bar'),
+  });
+
+  t.deepEqual(values, { ':foo': 'bar' });
+});
+
+test('Expression-Attribute-Value handles duenamo expression IN', t => {
+  const values = expressionAttributeValues({
+    foo: IN('bar', 'baz'),
+  });
+
+  t.deepEqual(values, {
+    ':foo_0': 'bar',
+    ':foo_1': 'baz',
+  });
+});
+
 test('Condition-Expression includes Name-Key and Value-Key', t => {
-  const exp = conditionExpression(['foo']);
+  const exp = conditionExpression({ foo: 'bar' });
 
   t.is(exp, '#foo = :foo');
 });
 
 test('Condition-Expression handles multiple Keys', t => {
-  const exp = conditionExpression(['foo', 'bar', 'hello', 'world']);
+  const exp = conditionExpression({
+    foo: 'bar',
+    bar: 'foo',
+    hello: 'world',
+    world: 'hello',
+  });
 
   t.is(
     exp,
     '#foo = :foo and #bar = :bar and #hello = :hello and #world = :world'
   );
+});
+
+test('Condition-Expression handles duenamo expression NOT', t => {
+  const exp = conditionExpression({
+    foo: NOT('bar'),
+  });
+
+  t.is(exp, '#foo <> :foo');
+});
+
+test('Condition-Expression handles duenamo expression IN', t => {
+  const exp = conditionExpression({
+    foo: IN('bar', 'baz', 'hello', 'world'),
+  });
+
+  t.is(exp, '#foo IN (:foo_0, :foo_1, :foo_2, :foo_3)');
 });

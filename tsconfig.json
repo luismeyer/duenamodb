@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "strictNullChecks": true,
     "composite": true,
     "module": "CommonJS",
     "noImplicitAny": true,
@@ -12,7 +13,8 @@
     "rootDir": "src",
     "strict": true,
     "resolveJsonModule": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "lib": ["ESNext"]
   },
   "exclude": ["example", "lib", "node_modules", "test"],
   "include": ["src"]

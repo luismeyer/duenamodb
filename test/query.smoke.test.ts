@@ -1,9 +1,13 @@
 import test from 'ava';
 
-import { PutItemCommand } from '@aws-sdk/client-dynamodb';
+import {
+  DeleteItemCommand,
+  PutItemCommand,
+  ScanCommand,
+} from '@aws-sdk/client-dynamodb';
 import { marshall } from '@aws-sdk/util-dynamodb';
 
-import { createQueryItems, DDBClient } from '../src';
+import { createQueryItems, DDBClient, IN, NOT } from '../src';
 import {
   Attributes,
   createAttributes,
@@ -22,6 +26,20 @@ const query = createQueryItems<Attributes, number>(tablename, {
 
 test.serial.before(async () => {
   setupDB();
+});
+
+test.serial.beforeEach(async () => {
+  const items = await DDBClient.instance.send(
+    new ScanCommand({ TableName: tablename })
+  );
+
+  await Promise.all(
+    (items.Items ?? [])?.map(item =>
+      DDBClient.instance.send(
+        new DeleteItemCommand({ TableName: tablename, Key: { id: item.id } })
+      )
+    )
+  );
 });
 
 test.serial('Query fetches Items', async t => {
@@ -55,4 +73,72 @@ test.serial('Query filters Items', async t => {
 
   t.assert(items);
   t.is(items.length, count / 2);
+});
+
+test.serial('Query filters Items by NOT expression', async t => {
+  const item1 = createAttributes({
+    name: '123',
+    age: 123,
+  });
+
+  const item2 = createAttributes({
+    name: '456',
+    age: 123,
+  });
+
+  const item3 = createAttributes({
+    name: '789',
+    age: 123,
+  });
+
+  await Promise.all([
+    await DDBClient.instance.send(
+      new PutItemCommand({ TableName: tablename, Item: marshall(item1) })
+    ),
+    await DDBClient.instance.send(
+      new PutItemCommand({ TableName: tablename, Item: marshall(item2) })
+    ),
+    await DDBClient.instance.send(
+      new PutItemCommand({ TableName: tablename, Item: marshall(item3) })
+    ),
+  ]);
+
+  const items = await query(123, { filterOptions: { name: NOT('789') } });
+
+  t.assert(items);
+  t.deepEqual(items, [item1, item2]);
+});
+
+test.serial('Query filters Items by IN expression', async t => {
+  const item1 = createAttributes({
+    name: '123',
+    age: 123,
+  });
+
+  const item2 = createAttributes({
+    name: '456',
+    age: 123,
+  });
+
+  const item3 = createAttributes({
+    name: '789',
+    age: 123,
+  });
+
+  await Promise.all([
+    await DDBClient.instance.send(
+      new PutItemCommand({ TableName: tablename, Item: marshall(item1) })
+    ),
+    await DDBClient.instance.send(
+      new PutItemCommand({ TableName: tablename, Item: marshall(item2) })
+    ),
+    await DDBClient.instance.send(
+      new PutItemCommand({ TableName: tablename, Item: marshall(item3) })
+    ),
+  ]);
+
+  const items = await query(123, { filterOptions: { name: IN('123', '456') } });
+
+  t.assert(items);
+  t.deepEqual(items, [item1, item2]);
 });

@@ -2,13 +2,13 @@ import { ScanCommand, ScanCommandInput } from '@aws-sdk/client-dynamodb';
 import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
 
 import { DDBClient } from './client';
-import { createConditionExpression } from './expression';
+import { createConditionExpression, FilterOptions } from './expression';
 import { DynamoDBTypes } from './types';
 
 type DynamoDBOptions = Omit<ScanCommandInput, 'TableName'>;
 
 export type ScanOptions<Attributes extends DynamoDBTypes> = {
-  filterOptions?: Partial<Attributes>;
+  filterOptions?: FilterOptions<Attributes>;
   dynamodbOptions?: DynamoDBOptions;
 };
 
@@ -39,10 +39,10 @@ export const createScanItems = <Attributes extends DynamoDBTypes>(
  * @param filterOptions Object to turn into ddb scruct
  * @returns DDB structs
  */
-export const createScanOptions = <A>(
-  filterOptions: Partial<A> = {}
+export const createScanOptions = <Attributes extends DynamoDBTypes>(
+  filterOptions?: FilterOptions<Attributes>
 ): Partial<DynamoDBOptions> => {
-  if (Object.keys(filterOptions).length === 0) {
+  if (!filterOptions || Object.keys(filterOptions).length === 0) {
     return {};
   }
 
