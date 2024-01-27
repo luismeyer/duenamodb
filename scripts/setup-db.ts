@@ -18,6 +18,10 @@ console.log('Configuring DB client...');
 DDBClient.params = {
   region: 'localhost',
   endpoint: `http://localhost:${dbPort}`,
+  credentials: {
+    accessKeyId: 'test',
+    secretAccessKey: 'test',
+  },
 };
 
 find('port', dbPort)

@@ -10,6 +10,10 @@ export const setupDB = () => {
   DDBClient.params = {
     region: 'localhost',
     endpoint: `http://localhost:${dbPort}`,
+    credentials: {
+      accessKeyId: 'test',
+      secretAccessKey: 'test',
+    },
   };
 };
 

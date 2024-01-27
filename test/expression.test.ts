@@ -7,102 +7,73 @@ import {
   expressionAttributeValues,
   conditionExpression,
 } from '../src';
-import { randomStringArray } from './helper/array';
-
-const key = 'test';
 
 test('Expression-Attribute-Name-Key includes key value', t => {
-  const nameKey = expressionAttributeNameKey(key);
+  const nameKey = expressionAttributeNameKey('foo');
 
-  t.true(nameKey.includes(key));
+  t.is(nameKey, '#foo');
 });
 
 test('Expression-Attribute-Value-Key includes key value', t => {
-  const valueKey = expressionAttributeValueKey(key);
+  const valueKey = expressionAttributeValueKey('foo');
 
-  t.true(valueKey.includes(key));
+  t.is(valueKey, ':foo');
 });
 
 test('Expression-Attribute-Value-Key and Expression-Attribute-Name-Key differ', t => {
-  const valueKey = expressionAttributeValueKey(key);
-  const nameKey = expressionAttributeNameKey(key);
+  const valueKey = expressionAttributeValueKey('foo');
+  const nameKey = expressionAttributeNameKey('foo');
 
   t.not(valueKey, nameKey);
 });
 
 test('Expression-Attribute-Names creates correct mapping', t => {
-  const namekey = expressionAttributeNameKey(key);
-  const names = expressionAttributeNames([key]);
+  const names = expressionAttributeNames(['foo']);
 
-  t.deepEqual(names, { [namekey]: key });
-  t.is(names?.[namekey], key);
+  t.deepEqual(names, { '#foo': 'foo' });
 });
 
 test('Expression-Attribute-Names creates correct amount of entries', t => {
-  const keys = randomStringArray();
+  const names = expressionAttributeNames(['foo', 'bar', 'hello', 'world']);
 
-  const names = expressionAttributeNames(keys);
-
-  t.is(Object.entries(names ?? {}).length, keys.length);
-  t.deepEqual(Object.values(names ?? {}), keys);
+  t.deepEqual(names, {
+    '#foo': 'foo',
+    '#bar': 'bar',
+    '#hello': 'hello',
+    '#world': 'world',
+  });
 });
 
 test('Expression-Attribute-Values creates correct mapping', t => {
-  const value = 'foo';
+  const values = expressionAttributeValues({ foo: 'bar' }, ['foo']);
 
-  const valuesInput = { [key]: value };
-  const valueKey = expressionAttributeValueKey(key);
-
-  const values = expressionAttributeValues(valuesInput, [key]);
-
-  t.deepEqual(values, { [valueKey]: value });
-  t.is(values?.[valueKey], value);
+  t.deepEqual(values, { ':foo': 'bar' });
 });
 
 test('Expression-Attribute-Value creates correct amount of entries', t => {
-  const keys = randomStringArray();
-
-  const valuesInput = keys.reduce(
-    (acc, curr) => ({
-      ...acc,
-      [curr]: `${curr}:value`,
-    }),
-    {}
+  const values = expressionAttributeValues(
+    { foo: 'bar', bar: 'foo', hello: 'world' },
+    ['foo', 'bar', 'hello']
   );
 
-  const values = expressionAttributeValues<any>(valuesInput, keys);
-
-  t.is(Object.entries(values ?? {}).length, keys.length);
-  t.deepEqual(Object.values(values ?? {}), Object.values(valuesInput));
+  t.deepEqual(values, {
+    ':foo': 'bar',
+    ':bar': 'foo',
+    ':hello': 'world',
+  });
 });
 
 test('Condition-Expression includes Name-Key and Value-Key', t => {
-  const nameKey = expressionAttributeNameKey(key);
-  const valueKey = expressionAttributeValueKey(key);
+  const exp = conditionExpression(['foo']);
 
-  const exp = conditionExpression([key]);
-
-  t.true(exp?.includes(nameKey));
-  t.true(exp?.includes(valueKey));
-
-  t.false(exp?.includes('and'));
-  t.true(exp?.includes('='));
+  t.is(exp, '#foo = :foo');
 });
 
 test('Condition-Expression handles multiple Keys', t => {
-  const keys = randomStringArray();
+  const exp = conditionExpression(['foo', 'bar', 'hello', 'world']);
 
-  const exp = conditionExpression(keys);
-
-  const andMatches = exp?.match(/ and /g);
-  t.is(andMatches?.length, keys.length - 1);
-
-  const equalMatches = exp?.match(/ = /g);
-  t.is(equalMatches?.length, keys.length);
-
-  const colonMatches = exp?.match(/:/g);
-  t.is(colonMatches?.length, keys.length);
-
-  const hashtagMatches = exp?.match(/#/g);
-  t.is(hashtagMatches?.length, keys.length);
+  t.is(
+    exp,
+    '#foo = :foo and #bar = :bar and #hello = :hello and #world = :world'
+  );
 });
