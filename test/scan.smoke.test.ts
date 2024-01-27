@@ -4,8 +4,10 @@ import { PutItemCommand, ScanCommand } from '@aws-sdk/client-dynamodb';
 import { convertToNative, marshall } from '@aws-sdk/util-dynamodb';
 
 import { createScanItems, DDBClient } from '../src';
-import { Attributes, createAttributes, setupDB, tablename } from './helper/db';
-import { randomNumber } from './helper/random';
+import { Attributes, connectToDynamoDB, createAttributes } from './helper/db';
+import { randomNumber, randomTableName } from './helper/random';
+
+const tablename = randomTableName();
 
 const itemsCount = 20;
 const scan = createScanItems<Attributes>(tablename);
@@ -13,7 +15,7 @@ const scan = createScanItems<Attributes>(tablename);
 const name = randomNumber() + 'foobar';
 
 test.serial.before(async () => {
-  setupDB();
+  await connectToDynamoDB(tablename);
 });
 
 test.serial('Scan fetches Items', async t => {

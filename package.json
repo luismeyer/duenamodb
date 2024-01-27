@@ -16,23 +16,9 @@
     "bump": "ts-node scripts/update-version",
     "prettier": "prettier --check .",
     "prettier:write": "prettier --write .",
-    "pretest": "ts-node scripts/setup-db",
-    "test": "ava",
+    "test": "ts-node scripts/tests",
     "posttest": "ts-node scripts/stop-db",
     "watch": "tsc -w"
-  },
-  "ava": {
-    "extensions": [
-      "ts"
-    ],
-    "files": [
-      "test/**/*",
-      "!test/helper/**/*"
-    ],
-    "require": [
-      "ts-node/register"
-    ],
-    "timeout": "1m"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.306.0",
@@ -41,16 +27,11 @@
   "devDependencies": {
     "@types/node": "^17.0.16",
     "@types/prettier": "^2.4.4",
-    "ava": "^4.1.0",
+    "ava": "^6.1.0",
     "dynamodb-local": "^0.0.31",
     "find-process": "^1.4.7",
     "prettier": "2.6.1",
     "ts-node": "^10.7.0",
     "typescript": "^4.5.5"
-  },
-  "test": {
-    "dbPort": 8000,
-    "tablename": "test-table",
-    "indexname": "test-gsi"
   }
 }

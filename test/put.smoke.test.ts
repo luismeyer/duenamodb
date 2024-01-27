@@ -4,15 +4,18 @@ import { GetItemCommand } from '@aws-sdk/client-dynamodb';
 import { convertToAttr, unmarshall } from '@aws-sdk/util-dynamodb';
 
 import { createPutItem, DDBClient } from '../src';
-import { Attributes, createAttributes, setupDB, tablename } from './helper/db';
+import { Attributes, connectToDynamoDB, createAttributes } from './helper/db';
+import { randomTableName } from './helper/random';
+
+const tablename = randomTableName();
+
+const put = createPutItem<Attributes>(tablename);
 
 test.serial.before(async () => {
-  setupDB();
+  await connectToDynamoDB(tablename);
 });
 
 test.serial('Put creates Item', async t => {
-  const put = createPutItem<Attributes>(tablename);
-
   const attributes = createAttributes();
 
   const res = await put(attributes);

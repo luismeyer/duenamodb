@@ -8,10 +8,13 @@ import {
 } from '@aws-sdk/util-dynamodb';
 
 import { createUpdateItem, DDBClient } from '../src';
-import { Attributes, createAttributes, setupDB, tablename } from './helper/db';
+import { Attributes, connectToDynamoDB, createAttributes } from './helper/db';
+import { randomTableName } from './helper/random';
+
+const tablename = randomTableName();
 
 test.serial.before(async () => {
-  setupDB();
+  await connectToDynamoDB(tablename);
 });
 
 test.serial('Update changes Item', async t => {

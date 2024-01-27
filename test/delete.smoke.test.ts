@@ -4,15 +4,17 @@ import { GetItemCommand, PutItemCommand } from '@aws-sdk/client-dynamodb';
 import { convertToAttr, marshall } from '@aws-sdk/util-dynamodb';
 
 import { createDeleteItem, DDBClient } from '../src';
-import { Attributes, createAttributes, setupDB, tablename } from './helper/db';
+import { Attributes, connectToDynamoDB, createAttributes } from './helper/db';
+import { randomTableName } from './helper/random';
+
+const tablename = randomTableName();
+const deleteItem = createDeleteItem<Attributes, string>(tablename, 'id');
 
 test.serial.before(async () => {
-  setupDB();
+  await connectToDynamoDB(tablename);
 });
 
 test.serial('Delete removes Item', async t => {
-  const deleteItem = createDeleteItem<Attributes, string>(tablename, 'id');
-
   const attributes = createAttributes();
 
   await DDBClient.instance.send(

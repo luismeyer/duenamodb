@@ -1,27 +1,15 @@
-import { test } from '../../package.json';
+import { CreateTableCommand } from '@aws-sdk/client-dynamodb';
+
 import { DDBClient } from '../../src';
-import { randomNumber } from './random';
-
-const { dbPort, tablename, indexname } = test;
-
-export { dbPort, tablename, indexname };
-
-export const setupDB = () => {
-  DDBClient.params = {
-    region: 'localhost',
-    endpoint: `http://localhost:${dbPort}`,
-    credentials: {
-      accessKeyId: 'test',
-      secretAccessKey: 'test',
-    },
-  };
-};
+import { randomNumber, randomTableName } from './random';
 
 export type Attributes = {
   id: string;
   age: number;
   name: string;
 };
+
+export const DB_PORT = 8000;
 
 export const createAttributes = (options?: {
   id?: string;
@@ -36,4 +24,48 @@ export const createAttributes = (options?: {
     age,
     name: options?.name ?? `Name-${id}`,
   };
+};
+
+export const connectToDynamoDB = async (
+  tablename = randomTableName(),
+  indexname = 'index-' + tablename
+) => {
+  DDBClient.params = {
+    region: 'localhost',
+    endpoint: `http://localhost:${DB_PORT}`,
+    credentials: {
+      accessKeyId: 'test',
+      secretAccessKey: 'test',
+    },
+  };
+
+  try {
+    await DDBClient.instance.send(
+      new CreateTableCommand({
+        TableName: tablename,
+        KeySchema: [{ AttributeName: 'id', KeyType: 'HASH' }],
+        ProvisionedThroughput: {
+          ReadCapacityUnits: 1,
+          WriteCapacityUnits: 1,
+        },
+        AttributeDefinitions: [
+          { AttributeName: 'id', AttributeType: 'S' },
+          { AttributeName: 'age', AttributeType: 'N' },
+        ],
+        GlobalSecondaryIndexes: [
+          {
+            IndexName: indexname,
+            KeySchema: [{ AttributeName: 'age', KeyType: 'HASH' }],
+            Projection: { ProjectionType: 'ALL' },
+            ProvisionedThroughput: {
+              ReadCapacityUnits: 1,
+              WriteCapacityUnits: 1,
+            },
+          },
+        ],
+      })
+    );
+  } catch (error) {
+    console.error('Create table error', error);
+  }
 };

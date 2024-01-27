@@ -1,23 +1,15 @@
 import test from 'ava';
 
-import {
-  DeleteItemCommand,
-  PutItemCommand,
-  ScanCommand,
-} from '@aws-sdk/client-dynamodb';
+import { PutItemCommand } from '@aws-sdk/client-dynamodb';
 import { marshall } from '@aws-sdk/util-dynamodb';
 
 import { createQueryItems, DDBClient, IN, NOT } from '../src';
-import {
-  Attributes,
-  createAttributes,
-  indexname,
-  setupDB,
-  tablename,
-} from './helper/db';
-import { randomNumber } from './helper/random';
+import { Attributes, connectToDynamoDB, createAttributes } from './helper/db';
+import { randomNumber, randomTableName } from './helper/random';
 
 const seed = randomNumber();
+const tablename = randomTableName();
+const indexname = 'index-' + seed;
 
 const query = createQueryItems<Attributes, number>(tablename, {
   name: indexname,
@@ -25,25 +17,11 @@ const query = createQueryItems<Attributes, number>(tablename, {
 });
 
 test.serial.before(async () => {
-  setupDB();
-});
-
-test.serial.beforeEach(async () => {
-  const items = await DDBClient.instance.send(
-    new ScanCommand({ TableName: tablename })
-  );
-
-  await Promise.all(
-    (items.Items ?? [])?.map(item =>
-      DDBClient.instance.send(
-        new DeleteItemCommand({ TableName: tablename, Key: { id: item.id } })
-      )
-    )
-  );
+  await connectToDynamoDB(tablename, indexname);
 });
 
 test.serial('Query fetches Items', async t => {
-  const attributes = createAttributes({ age: seed });
+  const attributes = createAttributes();
 
   await DDBClient.instance.send(
     new PutItemCommand({ TableName: tablename, Item: marshall(attributes) })
@@ -76,20 +54,10 @@ test.serial('Query filters Items', async t => {
 });
 
 test.serial('Query filters Items by NOT expression', async t => {
-  const item1 = createAttributes({
-    name: '123',
-    age: 123,
-  });
-
-  const item2 = createAttributes({
-    name: '456',
-    age: 123,
-  });
-
-  const item3 = createAttributes({
-    name: '789',
-    age: 123,
-  });
+  const age = randomNumber();
+  const item1 = createAttributes({ age });
+  const item2 = createAttributes({ age });
+  const item3 = createAttributes({ age });
 
   await Promise.all([
     await DDBClient.instance.send(
@@ -103,27 +71,20 @@ test.serial('Query filters Items by NOT expression', async t => {
     ),
   ]);
 
-  const items = await query(123, { filterOptions: { name: NOT('789') } });
+  const items = await query(age, { filterOptions: { name: NOT(item3.name) } });
 
   t.assert(items);
-  t.deepEqual(items, [item1, item2]);
+  t.is(items.length, 2);
+
+  t.true(items.some(({ id }) => item1.id === id));
+  t.true(items.some(({ id }) => item2.id === id));
 });
 
 test.serial('Query filters Items by IN expression', async t => {
-  const item1 = createAttributes({
-    name: '123',
-    age: 123,
-  });
-
-  const item2 = createAttributes({
-    name: '456',
-    age: 123,
-  });
-
-  const item3 = createAttributes({
-    name: '789',
-    age: 123,
-  });
+  const age = randomNumber();
+  const item1 = createAttributes({ age });
+  const item2 = createAttributes({ age });
+  const item3 = createAttributes({ age });
 
   await Promise.all([
     await DDBClient.instance.send(
@@ -137,8 +98,13 @@ test.serial('Query filters Items by IN expression', async t => {
     ),
   ]);
 
-  const items = await query(123, { filterOptions: { name: IN('123', '456') } });
+  const items = await query(age, {
+    filterOptions: { name: IN(item1.name, item2.name) },
+  });
 
   t.assert(items);
-  t.deepEqual(items, [item1, item2]);
+  t.is(items.length, 2);
+
+  t.true(items.some(({ id }) => item1.id === id));
+  t.true(items.some(({ id }) => item2.id === id));
 });
