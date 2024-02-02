@@ -120,3 +120,22 @@ test('Condition-Expression handles duenamo expression IN', t => {
 
   t.is(exp, '#foo IN (:foo_0, :foo_1, :foo_2, :foo_3)');
 });
+
+test('Condition-Expression handles equal expression and duenamo expression', t => {
+  const exp = conditionExpression({
+    id: NOT('1'),
+    name: 'username',
+    foo: IN('bar', 'baz'),
+  });
+
+  t.is(exp, '#id <> :id and #name = :name and #foo IN (:foo_0, :foo_1)');
+});
+
+test('Condition-Expression handles booleans', t => {
+  const exp = conditionExpression({
+    disabled: false,
+    name: 'username',
+  });
+
+  t.is(exp, '#disabled = :disabled and #name = :name');
+});

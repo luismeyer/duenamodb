@@ -21,11 +21,9 @@ const ping = async () => {
   };
 
   try {
-    const res = await DDBClient.instance.send(new ListTablesCommand({}));
-
-    console.log({ res });
+    await DDBClient.instance.send(new ListTablesCommand({}));
   } catch (error) {
-    console.log({ error });
+    console.error({ error });
 
     return false;
   }

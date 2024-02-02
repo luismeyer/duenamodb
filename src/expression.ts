@@ -64,10 +64,6 @@ export const expressionAttributeValues = <
   for (const key of keys) {
     const value = options[key];
 
-    if (value === undefined) {
-      continue;
-    }
-
     if (!isDuenamoExpression(value)) {
       result[expressionAttributeValueKey(key)] = value;
 
@@ -115,10 +111,6 @@ export const conditionExpression = <
 
   for (const key of keys) {
     const value = options[key];
-
-    if (!value) {
-      continue;
-    }
 
     const nameKey = expressionAttributeNameKey(key);
     const valueKey = expressionAttributeValueKey(key);
