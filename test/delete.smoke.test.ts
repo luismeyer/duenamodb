@@ -1,8 +1,6 @@
 import test from "ava";
-
 import { GetItemCommand, PutItemCommand } from "@aws-sdk/client-dynamodb";
 import { convertToAttr, marshall } from "@aws-sdk/util-dynamodb";
-
 import { createDeleteItem, DDBClient } from "../src";
 import { createTable } from "./helper/db";
 
@@ -13,7 +11,10 @@ test("Delete removes Item", async (t) => {
 		BillingMode: "PAY_PER_REQUEST",
 	});
 
-	const deleteItem = createDeleteItem<{ pk: string }, string>(tablename, "pk");
+	const deleteItem = createDeleteItem<{ pk: string }, string>({
+		tablename,
+		pkName: "pk",
+	});
 
 	await DDBClient.instance.send(
 		new PutItemCommand({ TableName: tablename, Item: marshall({ pk: "1" }) }),
@@ -52,7 +53,7 @@ test("Delete item with SK", async (t) => {
 		{ pk: string; sk: string },
 		string,
 		string
-	>(tablename, "pk", "sk");
+	>({ tablename, pkName: "pk", skName: "sk" });
 
 	await DDBClient.instance.send(
 		new PutItemCommand({

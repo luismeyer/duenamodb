@@ -16,20 +16,26 @@ export type ScanItemsFunction<Attributes extends DynamoDBTypes> = (
 	options?: ScanOptions<Attributes>,
 ) => Promise<Attributes[]>;
 
+type CreateScanItemsOptions<_Attributes extends DynamoDBTypes> = {
+	tablename: string;
+};
+
 /**
  * Create Function that scan items from ddb table
  * @param tablename Tablename
  * @returns Function that scans table
  */
 export const createScanItems = <Attributes extends DynamoDBTypes>(
-	tablename: string,
+	options: CreateScanItemsOptions<Attributes>,
 ): ScanItemsFunction<Attributes> => {
-	return (options = {}) => {
-		const scanOptions = createScanOptions(options.filterOptions);
+	const { tablename } = options;
+
+	return ({ filterOptions, dynamodbOptions } = {}) => {
+		const scanOptions = createScanOptions(filterOptions);
 
 		return scanItems(tablename, {
 			...scanOptions,
-			...options.dynamodbOptions,
+			...dynamodbOptions,
 		});
 	};
 };

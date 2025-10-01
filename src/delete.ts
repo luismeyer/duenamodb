@@ -18,10 +18,21 @@ export type DeleteItemFunction<TPK extends PK, TSK extends SK> = (
 	},
 ) => Promise<boolean>;
 
+type CreateDeleteItemOptions<Attributes extends DynamoDBTypes> = {
+	tablename: string;
+	/**
+	 * Name of the Partitionkey Attribute
+	 */
+	pkName: keyof Attributes;
+	/**
+	 * Name of the Sortkey Attribute
+	 */
+	skName?: keyof Attributes;
+};
+
 /**
  * Setup delete Function that removes item from ddb table
- * @param tablename Tablename
- * @param partitionKeyName Name of the Partitionkey
+ * @param options Options for the delete item function
  * @returns Boolean indicating success
  */
 export const createDeleteItem = <
@@ -29,18 +40,18 @@ export const createDeleteItem = <
 	TPK extends PK,
 	TSK extends SK = undefined,
 >(
-	tablename: string,
-	partitionKeyName: keyof Attributes,
-	sortKeyName?: keyof Attributes,
+	options: CreateDeleteItemOptions<Attributes>,
 ): DeleteItemFunction<TPK, TSK> => {
-	return (key, options = {}) =>
+	const { tablename, pkName, skName } = options;
+
+	return (key, { sortKey, dynamodbOptions = {} } = {}) =>
 		deleteItem(
 			tablename,
 			{
-				[partitionKeyName]: convertToAttr(key),
-				...maybeMerge(sortKeyName, maybeConvertToAttr(options.sortKey)),
+				[pkName]: convertToAttr(key),
+				...maybeMerge(skName, maybeConvertToAttr(sortKey)),
 			},
-			options.dynamodbOptions ?? {},
+			dynamodbOptions,
 		);
 };
 
@@ -50,7 +61,7 @@ export const createDeleteItem = <
  * @param key Identifier of the DDB item
  * @returns Boolean indicating success
  */
-export const deleteItem = async <T>(
+export const deleteItem = async <_T>(
 	tablename: string,
 	key: DeleteItemCommandInput["Key"],
 	options: DeleteItemOptions,

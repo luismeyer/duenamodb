@@ -1,14 +1,9 @@
 import test from "ava";
-
-import {
-	BatchWriteItemCommand,
-	PutItemCommand,
-} from "@aws-sdk/client-dynamodb";
+import { BatchWriteItemCommand } from "@aws-sdk/client-dynamodb";
 import { marshall } from "@aws-sdk/util-dynamodb";
-
 import { createQueryItems, DDBClient, IN, NOT } from "../src";
-import { type Attributes, createAttributes, createTable } from "./helper/db";
-import { randomNumber, randomString, randomTableName } from "./helper/random";
+import { createTable } from "./helper/db";
+import { randomString } from "./helper/random";
 
 test("Query fetches Items", async (t) => {
 	const indexName = randomString();
@@ -30,11 +25,11 @@ test("Query fetches Items", async (t) => {
 		],
 	});
 
-	const query = createQueryItems<{ pk: string; ik: string }, number>(
+	const query = createQueryItems<{ pk: string; ik: string }, number>({
 		tablename,
-		"ik",
-		{ indexName },
-	);
+		pkName: "ik",
+		indexName,
+	});
 
 	await DDBClient.instance.send(
 		new BatchWriteItemCommand({
@@ -58,7 +53,7 @@ test("Query fetches Items", async (t) => {
 	await destroy();
 });
 
-test.serial("Query filters Items", async (t) => {
+test("Query filters Items", async (t) => {
 	const indexName = randomString();
 
 	const { tablename, destroy } = await createTable({
@@ -81,7 +76,7 @@ test.serial("Query filters Items", async (t) => {
 	const query = createQueryItems<
 		{ pk: string; ik: string; filter: string },
 		number
-	>(tablename, "ik", { indexName });
+	>({ tablename, pkName: "ik", indexName });
 
 	await DDBClient.instance.send(
 		new BatchWriteItemCommand({
@@ -111,7 +106,7 @@ test.serial("Query filters Items", async (t) => {
 	await destroy();
 });
 
-test.serial("Query filters Items by NOT expression", async (t) => {
+test("Query filters Items by NOT expression", async (t) => {
 	const { tablename, destroy } = await createTable({
 		KeySchema: [
 			{ AttributeName: "pk", KeyType: "HASH" },
@@ -128,9 +123,7 @@ test.serial("Query filters Items by NOT expression", async (t) => {
 		{ pk: string; sk: string; p: number },
 		string,
 		number
-	>(tablename, "pk", {
-		sortKeyName: "sk",
-	});
+	>({ tablename, pkName: "pk", skName: "sk" });
 
 	await DDBClient.instance.send(
 		new BatchWriteItemCommand({
@@ -156,7 +149,7 @@ test.serial("Query filters Items by NOT expression", async (t) => {
 	await destroy();
 });
 
-test.serial("Query filters Items by IN expression", async (t) => {
+test("Query filters Items by IN expression", async (t) => {
 	const { tablename, destroy } = await createTable({
 		KeySchema: [
 			{ AttributeName: "pk", KeyType: "HASH" },
@@ -173,9 +166,7 @@ test.serial("Query filters Items by IN expression", async (t) => {
 		{ pk: string; sk: number; p: number },
 		string,
 		number
-	>(tablename, "pk", {
-		sortKeyName: "sk",
-	});
+	>({ tablename, pkName: "pk", skName: "sk" });
 
 	await DDBClient.instance.send(
 		new BatchWriteItemCommand({
@@ -215,16 +206,11 @@ test("Query finds Items by sort key", async (t) => {
 		BillingMode: "PAY_PER_REQUEST",
 	});
 
-	const query = createQueryItems<{ pk: string; sk: string }, string, number>(
+	const query = createQueryItems<{ pk: string; sk: string }, string, number>({
 		tablename,
-		"pk",
-		{
-			sortKeyName: "sk",
-		},
-	);
-
-	const item1 = createAttributes({ id: "myid", age: 1 });
-	const item2 = createAttributes({ id: "myid", age: 2 });
+		pkName: "pk",
+		skName: "sk",
+	});
 
 	await DDBClient.instance.send(
 		new BatchWriteItemCommand({

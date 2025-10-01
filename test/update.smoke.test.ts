@@ -8,7 +8,7 @@ import {
 } from "@aws-sdk/util-dynamodb";
 
 import { createUpdateItem, DDBClient } from "../src";
-import { type Attributes, createAttributes, createTable } from "./helper/db";
+import { createTable } from "./helper/db";
 
 test("Update changes Item", async (t) => {
 	const { tablename, destroy } = await createTable({
@@ -17,7 +17,10 @@ test("Update changes Item", async (t) => {
 		BillingMode: "PAY_PER_REQUEST",
 	});
 
-	const update = createUpdateItem<{ pk: string; age: number }>(tablename, "pk");
+	const update = createUpdateItem<{ pk: string; age: number }>({
+		tablename,
+		pkName: "pk",
+	});
 
 	await DDBClient.instance.send(
 		new PutItemCommand({

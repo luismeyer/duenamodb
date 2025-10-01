@@ -20,26 +20,26 @@ export const createTableFunctions = <
 	partitionKeyName: string,
 	sortKeyName?: string,
 ) => {
-	const putItem = createPutItem<Attributes>(tablename);
+	const putItem = createPutItem<Attributes>({ tablename });
 
-	const getItem = createGetItem<Attributes, TPK, TSK>(
+	const getItem = createGetItem<Attributes, TPK, TSK>({
 		tablename,
-		partitionKeyName,
-		sortKeyName,
-	);
+		pkName: partitionKeyName,
+		skName: sortKeyName,
+	});
 
-	const updateItem = createUpdateItem<Attributes>(
+	const updateItem = createUpdateItem<Attributes>({
 		tablename,
-		partitionKeyName,
-		sortKeyName,
-	);
+		pkName: partitionKeyName,
+		skName: sortKeyName,
+	});
 
-	const scanItems = createScanItems<Attributes>(tablename);
+	const scanItems = createScanItems<Attributes>({ tablename });
 
-	const deleteItem = createDeleteItem<Attributes, TPK>(
+	const deleteItem = createDeleteItem<Attributes, TPK>({
 		tablename,
-		partitionKeyName,
-	);
+		pkName: partitionKeyName,
+	});
 
 	return {
 		scanItems,

@@ -24,10 +24,21 @@ export type GetItemFunction<
 	options?: GetItemOptions<TSK>,
 ) => Promise<Attributes | undefined>;
 
+type CreateGetItemOptions<Attributes extends DynamoDBTypes> = {
+	tablename: string;
+	/**
+	 * Name of the Partitionkey Attribute
+	 */
+	pkName: keyof Attributes;
+	/**
+	 * Name of the Sortkey Attribute
+	 */
+	skName?: keyof Attributes;
+};
+
 /**
  * Create Function that gets item from ddb table
- * @param tablename Tablename
- * @param partitionKeyName Name of the Partitionkey
+ * @param options Options for the get item function
  * @returns Function that gets item
  */
 export const createGetItem = <
@@ -35,18 +46,18 @@ export const createGetItem = <
 	TPK extends PK,
 	TSK extends SK = undefined,
 >(
-	tablename: string,
-	partitionKeyName: keyof Attributes,
-	sortKeyName?: keyof Attributes,
+	options: CreateGetItemOptions<Attributes>,
 ): GetItemFunction<Attributes, TPK, TSK> => {
-	return async (key, options = {}) => {
+	const { tablename, pkName, skName } = options;
+
+	return async (key, { sortKey, dynamodbOptions = {} } = {}) => {
 		return getItem(
 			tablename,
 			{
-				[partitionKeyName]: convertToAttr(key),
-				...maybeMerge(sortKeyName, maybeConvertToAttr(options.sortKey)),
+				[pkName]: convertToAttr(key),
+				...maybeMerge(skName, maybeConvertToAttr(sortKey)),
 			},
-			options.dynamodbOptions ?? {},
+			dynamodbOptions,
 		);
 	};
 };

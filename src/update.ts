@@ -31,29 +31,38 @@ export type UpdateItemFunction<Attributes extends DynamoDBTypes> = (
 	options: UpdateItemOptions<Attributes>,
 ) => Promise<Attributes | undefined>;
 
+type CreateUpdateItemOptions<Attributes extends DynamoDBTypes> = {
+	tablename: string;
+	/**
+	 * Name of the Partitionkey Attribute
+	 */
+	pkName: keyof Attributes;
+	/**
+	 * Name of the Sortkey Attribute
+	 */
+	skName?: keyof Attributes;
+};
+
 /**
  * Create util function that updates item in DB
- * @param tablename Tablename
+ * @param options Options for the update item function
  * @returns Function to update item
  */
 export const createUpdateItem = <Attributes extends DynamoDBTypes>(
-	tablename: string,
-	partitionKeyName: keyof Attributes,
-	sortKeyName?: keyof Attributes,
+	options: CreateUpdateItemOptions<Attributes>,
 ): UpdateItemFunction<Attributes> => {
-	return async (item, options) => {
-		const updateOptions = createUpdateOptions(
-			partitionKeyName,
-			sortKeyName,
-			item,
-			options,
-		);
+	const { tablename, pkName, skName } = options;
+
+	return async (item, options = {}) => {
+		const { dynamodbOptions = {}, removeKeys = [] } = options;
+
+		const updateOptions = createUpdateOptions(pkName, skName, item, options);
 		if (!updateOptions) {
 			return item;
 		}
 
 		const updatedItemSuccess = await updateItem(tablename, {
-			...options.dynamodbOptions,
+			...dynamodbOptions,
 			...updateOptions,
 		});
 
@@ -62,7 +71,7 @@ export const createUpdateItem = <Attributes extends DynamoDBTypes>(
 		}
 
 		// remove the values for the updated item
-		const removeKeys = options.removeKeys ?? [];
+
 		for (const key of removeKeys) {
 			delete item[key];
 		}

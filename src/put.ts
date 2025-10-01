@@ -14,14 +14,20 @@ export type PutItemFunction<Attributes extends DynamoDBTypes> = (
 	options?: PutItemOptions,
 ) => Promise<Attributes>;
 
+export type CreatePutItemOptions<_Attributes extends DynamoDBTypes> = {
+	tablename: string;
+};
+
 /**
  * Create Function to put item into ddb table
  * @param tablename Tablename
  * @returns Function that puts item
  */
 export const createPutItem = <Attributes extends DynamoDBTypes>(
-	tablename: string,
+	options: CreatePutItemOptions<Attributes>,
 ): PutItemFunction<Attributes> => {
+	const { tablename } = options;
+
 	return (item, options = {}) => putItem(tablename, marshall(item), options);
 };
 

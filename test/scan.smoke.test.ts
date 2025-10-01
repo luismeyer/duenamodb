@@ -1,14 +1,8 @@
 import test from "ava";
-
-import {
-	BatchWriteItemCommand,
-	PutItemCommand,
-	ScanCommand,
-} from "@aws-sdk/client-dynamodb";
-import { convertToNative, marshall } from "@aws-sdk/util-dynamodb";
-
+import { BatchWriteItemCommand } from "@aws-sdk/client-dynamodb";
+import { marshall } from "@aws-sdk/util-dynamodb";
 import { createScanItems, DDBClient, NOT } from "../src";
-import { type Attributes, createAttributes, createTable } from "./helper/db";
+import { type Attributes, createTable } from "./helper/db";
 
 test("Scan fetches Items", async (t) => {
 	const { tablename, destroy } = await createTable({
@@ -17,7 +11,7 @@ test("Scan fetches Items", async (t) => {
 		BillingMode: "PAY_PER_REQUEST",
 	});
 
-	const scan = createScanItems<Attributes>(tablename);
+	const scan = createScanItems<Attributes>({ tablename });
 
 	await DDBClient.instance.send(
 		new BatchWriteItemCommand({
@@ -46,7 +40,7 @@ test("Scan filters Items", async (t) => {
 		BillingMode: "PAY_PER_REQUEST",
 	});
 
-	const scan = createScanItems<{ pk: string; filter: boolean }>(tablename);
+	const scan = createScanItems<{ pk: string; filter: boolean }>({ tablename });
 
 	await DDBClient.instance.send(
 		new BatchWriteItemCommand({

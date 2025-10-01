@@ -1,7 +1,6 @@
 import { PutItemCommand } from "@aws-sdk/client-dynamodb";
 import { marshall } from "@aws-sdk/util-dynamodb";
 import test from "ava";
-
 import { createGetItem, DDBClient } from "../src";
 import { createTable } from "./helper/db";
 
@@ -12,7 +11,10 @@ test("Get fetches Item", async (t) => {
 		BillingMode: "PAY_PER_REQUEST",
 	});
 
-	const get = createGetItem<{ pk: string }, string>(tablename, "pk");
+	const get = createGetItem<{ pk: string }, string>({
+		tablename,
+		pkName: "pk",
+	});
 
 	await DDBClient.instance.send(
 		new PutItemCommand({ TableName: tablename, Item: marshall({ pk: "1" }) }),
@@ -39,11 +41,11 @@ test("Get fetches Item with SK", async (t) => {
 		BillingMode: "PAY_PER_REQUEST",
 	});
 
-	const get = createGetItem<{ pk: string; sk: string }, string, string>(
+	const get = createGetItem<{ pk: string; sk: string }, string, string>({
 		tablename,
-		"pk",
-		"sk",
-	);
+		pkName: "pk",
+		skName: "sk",
+	});
 
 	await DDBClient.instance.send(
 		new PutItemCommand({

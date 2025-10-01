@@ -6,9 +6,17 @@ import { createConditionExpression, type FilterOptions } from "./expression";
 import { maybeMerge } from "./object";
 import type { DynamoDBTypes, PK, SK } from "./types";
 
-type CreateQueryOptions<Attributes extends DynamoDBTypes> = {
+type CreateQueryItemsOptions<Attributes extends DynamoDBTypes> = {
+	tablename: string;
 	indexName?: string;
-	sortKeyName?: keyof Attributes;
+	/**
+	 * Name of the Partitionkey Attribute
+	 */
+	pkName: keyof Attributes;
+	/**
+	 * Name of the Sortkey Attribute
+	 */
+	skName?: keyof Attributes;
 };
 
 type QueryDynamoDBOptions = Omit<QueryCommandInput, "TableName">;
@@ -30,8 +38,7 @@ export type QueryItemsFunction<
 
 /**
  * Creates A function to query the Table
- * @param tablename Name of DynamoDB Table
- * @param options Key and GSI options
+ * @param options Options for the query items function
  * @returns Function to query table
  */
 export const createQueryItems = <
@@ -39,27 +46,25 @@ export const createQueryItems = <
 	TPK extends PK,
 	TSK extends SK = undefined,
 >(
-	tablename: string,
-	partitionKeyName: keyof Attributes,
-	options: CreateQueryOptions<Attributes>,
+	options: CreateQueryItemsOptions<Attributes>,
 ): QueryItemsFunction<Attributes, TPK, TSK> => {
-	const { indexName, sortKeyName } = options;
+	const { indexName, skName, pkName, tablename } = options;
 
-	return (key, options = {}) => {
+	return (key, { sortKey, dynamodbOptions = {}, filterOptions } = {}) => {
 		const keyOptions = {
-			[partitionKeyName]: key,
+			[pkName]: key,
 
-			...maybeMerge(sortKeyName, options.sortKey),
+			...maybeMerge(skName, sortKey),
 		} as Partial<Attributes>;
 
 		const queryOptions = createQueryOptions(
 			keyOptions,
 			indexName,
-			options.filterOptions,
+			filterOptions,
 		);
 
 		return queryItems(tablename, {
-			...options.dynamodbOptions,
+			...dynamodbOptions,
 			...queryOptions,
 		});
 	};
