@@ -14,7 +14,7 @@ export type DeleteItemFunction<TPK extends PK, TSK extends SK> = (
 	key: TPK,
 	options?: {
 		dynamodbOptions?: DeleteItemOptions;
-		sortKey?: TSK;
+		sk?: TSK;
 	},
 ) => Promise<boolean>;
 
@@ -44,12 +44,12 @@ export const createDeleteItem = <
 ): DeleteItemFunction<TPK, TSK> => {
 	const { tablename, pkName, skName } = options;
 
-	return (key, { sortKey, dynamodbOptions = {} } = {}) =>
+	return (key, { sk, dynamodbOptions = {} } = {}) =>
 		deleteItem(
 			tablename,
 			{
 				[pkName]: convertToAttr(key),
-				...maybeMerge(skName, maybeConvertToAttr(sortKey)),
+				...maybeMerge(skName, maybeConvertToAttr(sk)),
 			},
 			dynamodbOptions,
 		);

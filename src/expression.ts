@@ -1,5 +1,5 @@
 import type { NativeAttributeValue } from "@aws-sdk/util-dynamodb";
-import type { DynamoDBTypes } from "./types";
+import type { DynamoDBTypes, SK } from "./types";
 
 /**
  * Turns a string key into a DDB-name-key
@@ -44,6 +44,24 @@ const expressionAttributeValueNotKey = (key: string) =>
 
 const andKey = (key: string, index: number) => `${key}_and${index}`;
 
+const expressionAttributeValueLessThanKey = (key: string) =>
+	expressionAttributeValueKey(`less_than_${key}`);
+
+const expressionAttributeValueGreaterThanKey = (key: string) =>
+	expressionAttributeValueKey(`greater_than_${key}`);
+
+const expressionAttributeValueLessOrEqualKey = (key: string) =>
+	expressionAttributeValueKey(`less_or_equal_${key}`);
+
+const expressionAttributeValueGreaterOrEqualKey = (key: string) =>
+	expressionAttributeValueKey(`greater_or_equal_${key}`);
+
+const expressionAttributeValueBetweenKey = (key: string, index: number) =>
+	expressionAttributeValueKey(`between_${key}_${index}`);
+
+const expressionAttributeValueBeginsWithKey = (key: string) =>
+	expressionAttributeValueKey(`begins_with_${key}`);
+
 const transformExpressionAttributeEntry = <Attributes extends DynamoDBTypes>(
 	key: string,
 	value: Attributes[string] | DuenamoExpression<Attributes[string]> | undefined,
@@ -81,6 +99,33 @@ const transformExpressionAttributeEntry = <Attributes extends DynamoDBTypes>(
 		return result;
 	}
 
+	if (value.duenamoType === "is_less_than") {
+		return { [expressionAttributeValueLessThanKey(key)]: value.value };
+	}
+
+	if (value.duenamoType === "is_greater_than") {
+		return { [expressionAttributeValueGreaterThanKey(key)]: value.value };
+	}
+
+	if (value.duenamoType === "is_less_or_equal") {
+		return { [expressionAttributeValueLessOrEqualKey(key)]: value.value };
+	}
+
+	if (value.duenamoType === "is_greater_or_equal") {
+		return { [expressionAttributeValueGreaterOrEqualKey(key)]: value.value };
+	}
+
+	if (value.duenamoType === "is_between") {
+		return {
+			[expressionAttributeValueBetweenKey(key, 0)]: value.value1,
+			[expressionAttributeValueBetweenKey(key, 1)]: value.value2,
+		};
+	}
+
+	if (value.duenamoType === "begins_with") {
+		return { [expressionAttributeValueBeginsWithKey(key)]: value.value };
+	}
+
 	return {};
 };
 
@@ -93,7 +138,7 @@ const transformExpressionAttributeEntry = <Attributes extends DynamoDBTypes>(
  */
 export const expressionAttributeValues = <
 	Attributes extends DynamoDBTypes,
-	Options extends FilterOptions<Attributes>,
+	Options extends FilterCondition<Attributes>,
 >(
 	options: Options,
 ): Record<string, NativeAttributeValue> | undefined => {
@@ -155,6 +200,30 @@ const transformConditionExpressionEntry = <Attributes extends DynamoDBTypes>(
 		return `(${result.join(" AND ")})`;
 	}
 
+	if (value.duenamoType === "is_less_than") {
+		return `(${nameKey} < ${expressionAttributeValueLessThanKey(key)})`;
+	}
+
+	if (value.duenamoType === "is_greater_than") {
+		return `(${nameKey} > ${expressionAttributeValueGreaterThanKey(key)})`;
+	}
+
+	if (value.duenamoType === "is_less_or_equal") {
+		return `(${nameKey} <= ${expressionAttributeValueLessOrEqualKey(key)})`;
+	}
+
+	if (value.duenamoType === "is_greater_or_equal") {
+		return `(${nameKey} >= ${expressionAttributeValueGreaterOrEqualKey(key)})`;
+	}
+
+	if (value.duenamoType === "is_between") {
+		return `(${nameKey} BETWEEN ${expressionAttributeValueBetweenKey(key, 0)} AND ${expressionAttributeValueBetweenKey(key, 1)})`;
+	}
+
+	if (value.duenamoType === "begins_with") {
+		return `begins_with(${nameKey}, ${expressionAttributeValueBeginsWithKey(key)})`;
+	}
+
 	return "";
 };
 
@@ -166,7 +235,7 @@ const transformConditionExpressionEntry = <Attributes extends DynamoDBTypes>(
  */
 export const conditionExpression = <
 	Attributes extends DynamoDBTypes,
-	Options extends FilterOptions<Attributes>,
+	Options extends FilterCondition<Attributes>,
 >(
 	options: Options,
 ): string | undefined => {
@@ -239,12 +308,26 @@ export const AND = <Attribute extends NativeAttributeValue>(
 type DuenamoExpression<Value extends NativeAttributeValue> =
 	| NotExpression<Value>
 	| InExpression<Value>
-	| AndExpression<Value>;
+	| AndExpression<Value>
+	| IsLessExpression<Value>
+	| IsGreaterExpression<Value>
+	| IsLessOrEqualExpression<Value>
+	| IsGreaterOrEqualExpression<Value>
+	| IsBetweenExpression<Value>
+	| BeginsWithExpression<Value>;
 
-export type FilterOptions<Attributes extends DynamoDBTypes> = {
+export type FilterCondition<Attributes extends DynamoDBTypes> = {
 	[Key in keyof Attributes]?:
 		| Attributes[Key]
-		| DuenamoExpression<Attributes[Key]>;
+		| NotExpression<Attributes[Key]>
+		| InExpression<Attributes[Key]>
+		| AndExpression<Attributes[Key]>
+		| IsLessExpression<Attributes[Key]>
+		| IsGreaterExpression<Attributes[Key]>
+		| IsLessOrEqualExpression<Attributes[Key]>
+		| IsGreaterOrEqualExpression<Attributes[Key]>
+		| IsBetweenExpression<Attributes[Key]>
+		| BeginsWithExpression<Attributes[Key]>;
 };
 
 /**
@@ -254,7 +337,7 @@ export type FilterOptions<Attributes extends DynamoDBTypes> = {
  */
 export const createConditionExpression = <
 	Attributes extends DynamoDBTypes,
-	Options extends FilterOptions<Attributes>,
+	Options extends FilterCondition<Attributes>,
 >(
 	object: Options,
 ) => {
@@ -270,3 +353,83 @@ export const createConditionExpression = <
 		expression,
 	};
 };
+
+type IsLessExpression<Value extends NativeAttributeValue> = {
+	duenamoType: "is_less_than";
+	value: Value;
+};
+
+export const IS_LESS_THAN = <Value extends NativeAttributeValue>(
+	value: Value,
+): IsLessExpression<Value> => {
+	return { duenamoType: "is_less_than", value };
+};
+
+type IsGreaterExpression<Value extends NativeAttributeValue> = {
+	duenamoType: "is_greater_than";
+	value: Value;
+};
+
+export const IS_GREATER_THAN = <Value extends NativeAttributeValue>(
+	value: Value,
+): IsGreaterExpression<Value> => {
+	return { duenamoType: "is_greater_than", value };
+};
+
+type IsLessOrEqualExpression<Value extends NativeAttributeValue> = {
+	duenamoType: "is_less_or_equal";
+	value: Value;
+};
+
+export const IS_LESS_OR_EQUAL_THAN = <Value extends NativeAttributeValue>(
+	value: Value,
+): IsLessOrEqualExpression<Value> => {
+	return { duenamoType: "is_less_or_equal", value };
+};
+
+type IsGreaterOrEqualExpression<Value extends NativeAttributeValue> = {
+	duenamoType: "is_greater_or_equal";
+	value: Value;
+};
+
+export const IS_GREATER_OR_EQUAL_THAN = <Value extends NativeAttributeValue>(
+	value: Value,
+): IsGreaterOrEqualExpression<Value> => {
+	return { duenamoType: "is_greater_or_equal", value };
+};
+
+type IsBetweenExpression<Value extends NativeAttributeValue> = {
+	duenamoType: "is_between";
+	value1: Value;
+	value2: Value;
+};
+
+export const IS_BETWEEN = <Value extends NativeAttributeValue>(
+	value1: Value,
+	value2: Value,
+): IsBetweenExpression<Value> => {
+	return { duenamoType: "is_between", value1, value2 };
+};
+
+type BeginsWithExpression<Value extends NativeAttributeValue> = {
+	duenamoType: "begins_with";
+	value: Value;
+};
+
+export const BEGINS_WITH = <Value extends NativeAttributeValue>(
+	value: Value,
+): BeginsWithExpression<Value> => {
+	return { duenamoType: "begins_with", value };
+};
+
+export type SortKeyCondition<TSK extends SK> = TSK extends number
+	?
+			| TSK
+			| IsLessExpression<TSK>
+			| IsGreaterExpression<TSK>
+			| IsLessOrEqualExpression<TSK>
+			| IsGreaterOrEqualExpression<TSK>
+			| IsBetweenExpression<TSK>
+	: TSK extends string
+		? TSK | BeginsWithExpression<TSK>
+		: TSK;

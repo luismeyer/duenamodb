@@ -6,6 +6,12 @@ import {
 	IN,
 	AND,
 	createConditionExpression,
+	IS_LESS_THAN,
+	IS_GREATER_THAN,
+	IS_LESS_OR_EQUAL_THAN,
+	IS_GREATER_OR_EQUAL_THAN,
+	IS_BETWEEN,
+	BEGINS_WITH,
 } from "../src";
 
 test("Expression-Attribute-Name-Key includes key value", (t) => {
@@ -221,5 +227,96 @@ test("handles nested duenamo expression AND", (t) => {
 		":not_foo_and0": "foo",
 		":not_foo_and1_and0": "hello",
 		":not_foo_and1_and1": "world",
+	});
+});
+
+test("handles duenamo expression IS_LESS_THAN", (t) => {
+	const { attributeNames, attributeValues, expression } =
+		createConditionExpression({
+			foo: IS_LESS_THAN("bar"),
+		});
+
+	t.is(expression, "(#foo < :less_than_foo)");
+	t.deepEqual(attributeNames, {
+		"#foo": "foo",
+	});
+	t.deepEqual(attributeValues, {
+		":less_than_foo": "bar",
+	});
+});
+
+test("handles duenamo expression IS_GREATER_THAN", (t) => {
+	const { attributeNames, attributeValues, expression } =
+		createConditionExpression({
+			foo: IS_GREATER_THAN("bar"),
+		});
+
+	t.is(expression, "(#foo > :greater_than_foo)");
+	t.deepEqual(attributeNames, {
+		"#foo": "foo",
+	});
+	t.deepEqual(attributeValues, {
+		":greater_than_foo": "bar",
+	});
+});
+
+test("handles duenamo expression IS_LESS_OR_EQUAL_THAN", (t) => {
+	const { attributeNames, attributeValues, expression } =
+		createConditionExpression({
+			foo: IS_LESS_OR_EQUAL_THAN("bar"),
+		});
+
+	t.is(expression, "(#foo <= :less_or_equal_foo)");
+	t.deepEqual(attributeNames, {
+		"#foo": "foo",
+	});
+	t.deepEqual(attributeValues, {
+		":less_or_equal_foo": "bar",
+	});
+});
+
+test("handles duenamo expression IS_GREATER_OR_EQUAL_THAN", (t) => {
+	const { attributeNames, attributeValues, expression } =
+		createConditionExpression({
+			foo: IS_GREATER_OR_EQUAL_THAN("bar"),
+		});
+
+	t.is(expression, "(#foo >= :greater_or_equal_foo)");
+	t.deepEqual(attributeNames, {
+		"#foo": "foo",
+	});
+	t.deepEqual(attributeValues, {
+		":greater_or_equal_foo": "bar",
+	});
+});
+
+test("handles duenamo expression IS_BETWEEN", (t) => {
+	const { attributeNames, attributeValues, expression } =
+		createConditionExpression({
+			foo: IS_BETWEEN("bar", "baz"),
+		});
+
+	t.is(expression, "(#foo BETWEEN :between_foo_0 AND :between_foo_1)");
+	t.deepEqual(attributeNames, {
+		"#foo": "foo",
+	});
+	t.deepEqual(attributeValues, {
+		":between_foo_0": "bar",
+		":between_foo_1": "baz",
+	});
+});
+
+test("handles duenamo expression BEGINS_WITH", (t) => {
+	const { attributeNames, attributeValues, expression } =
+		createConditionExpression({
+			foo: BEGINS_WITH("bar"),
+		});
+
+	t.is(expression, "begins_with(#foo, :begins_with_foo)");
+	t.deepEqual(attributeNames, {
+		"#foo": "foo",
+	});
+	t.deepEqual(attributeValues, {
+		":begins_with_foo": "bar",
 	});
 });

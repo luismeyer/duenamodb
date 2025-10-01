@@ -54,7 +54,7 @@ test("Get fetches Item with SK", async (t) => {
 		}),
 	);
 
-	const item = await get("1", { sortKey: "1" });
+	const item = await get("1", { sk: "1" });
 
 	t.assert(item);
 	t.deepEqual(item, { pk: "1", sk: "1" });

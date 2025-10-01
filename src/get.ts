@@ -11,7 +11,7 @@ import { maybeConvertToAttr, maybeMerge } from "./object";
 type GetDynamoOptions = Omit<GetItemCommandInput, "TableName" | "Key">;
 
 type GetItemOptions<TSK extends SK> = {
-	sortKey?: TSK;
+	sk?: TSK;
 	dynamodbOptions?: GetDynamoOptions;
 };
 
@@ -50,12 +50,12 @@ export const createGetItem = <
 ): GetItemFunction<Attributes, TPK, TSK> => {
 	const { tablename, pkName, skName } = options;
 
-	return async (key, { sortKey, dynamodbOptions = {} } = {}) => {
+	return async (key, { sk, dynamodbOptions = {} } = {}) => {
 		return getItem(
 			tablename,
 			{
 				[pkName]: convertToAttr(key),
-				...maybeMerge(skName, maybeConvertToAttr(sortKey)),
+				...maybeMerge(skName, maybeConvertToAttr(sk)),
 			},
 			dynamodbOptions,
 		);

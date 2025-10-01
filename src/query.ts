@@ -2,7 +2,11 @@ import { QueryCommand, type QueryCommandInput } from "@aws-sdk/client-dynamodb";
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 
 import { DDBClient } from "./client";
-import { createConditionExpression, type FilterOptions } from "./expression";
+import {
+	createConditionExpression,
+	type SortKeyCondition,
+	type FilterCondition,
+} from "./expression";
 import { maybeMerge } from "./object";
 import type { DynamoDBTypes, PK, SK } from "./types";
 
@@ -22,8 +26,8 @@ type CreateQueryItemsOptions<Attributes extends DynamoDBTypes> = {
 type QueryDynamoDBOptions = Omit<QueryCommandInput, "TableName">;
 
 export type QueryOptions<Attributes extends DynamoDBTypes, TSK extends SK> = {
-	sortKey?: TSK;
-	filterOptions?: FilterOptions<Attributes>;
+	sk?: SortKeyCondition<TSK>;
+	filter?: FilterCondition<Attributes>;
 	dynamodbOptions?: QueryDynamoDBOptions;
 };
 
@@ -50,18 +54,14 @@ export const createQueryItems = <
 ): QueryItemsFunction<Attributes, TPK, TSK> => {
 	const { indexName, skName, pkName, tablename } = options;
 
-	return (key, { sortKey, dynamodbOptions = {}, filterOptions } = {}) => {
+	return (key, { sk, dynamodbOptions = {}, filter } = {}) => {
 		const keyOptions = {
 			[pkName]: key,
 
-			...maybeMerge(skName, sortKey),
+			...maybeMerge(skName, sk),
 		} as Partial<Attributes>;
 
-		const queryOptions = createQueryOptions(
-			keyOptions,
-			indexName,
-			filterOptions,
-		);
+		const queryOptions = createQueryOptions(keyOptions, indexName, filter);
 
 		return queryItems(tablename, {
 			...dynamodbOptions,
@@ -74,13 +74,13 @@ export const createQueryItems = <
  * Create the needed query DDB structs
  * @param index DDB index name
  * @param keyOptions Keys and values to query
- * @param filterOptions Keys and values to filter after the query
+ * @param filter Keys and values to filter after the query
  * @returns Query Options
  */
 export const createQueryOptions = <Attributes extends DynamoDBTypes>(
 	keyOptions: Partial<Attributes>,
 	index?: string,
-	filterOptions?: FilterOptions<Attributes>,
+	filter?: FilterCondition<Attributes>,
 ): Partial<QueryDynamoDBOptions> => {
 	// DDB key/index condition structs
 	const {
@@ -94,7 +94,7 @@ export const createQueryOptions = <Attributes extends DynamoDBTypes>(
 		attributeNames: filterNames,
 		attributeValues: filterValues,
 		expression: filterExpression,
-	} = createConditionExpression(filterOptions ?? {});
+	} = createConditionExpression(filter ?? {});
 
 	return {
 		IndexName: index,

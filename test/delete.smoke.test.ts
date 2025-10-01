@@ -62,7 +62,7 @@ test("Delete item with SK", async (t) => {
 		}),
 	);
 
-	const success = await deleteItem("1", { sortKey: "1" });
+	const success = await deleteItem("1", { sk: "1" });
 	t.true(success);
 
 	const { Item } = await DDBClient.instance.send(
