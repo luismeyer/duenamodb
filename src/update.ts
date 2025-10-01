@@ -1,34 +1,34 @@
 import {
-  UpdateItemCommand,
-  type UpdateItemCommandInput,
-} from '@aws-sdk/client-dynamodb';
+	UpdateItemCommand,
+	type UpdateItemCommandInput,
+} from "@aws-sdk/client-dynamodb";
 import {
-  convertToAttr,
-  marshall,
-  type NativeAttributeValue,
-} from '@aws-sdk/util-dynamodb';
+	convertToAttr,
+	marshall,
+	type NativeAttributeValue,
+} from "@aws-sdk/util-dynamodb";
 
-import { DDBClient } from './client';
+import { DDBClient } from "./client";
 import {
-  expressionAttributeNameKey,
-  expressionAttributeNames,
-  expressionAttributeValueKey,
-  expressionAttributeValues,
-} from './expression';
-import { type Keys, maybeMerge, maybeConvertToAttr } from './object';
-import type { DynamoDBTypes } from './types';
+	expressionAttributeNameKey,
+	expressionAttributeNames,
+	expressionAttributeValueKey,
+	expressionAttributeValues,
+} from "./expression";
+import { type Keys, maybeMerge, maybeConvertToAttr } from "./object";
+import type { DynamoDBTypes } from "./types";
 
-type DynamoDBOptions = Omit<UpdateItemCommandInput, 'TableName'>;
+type DynamoDBOptions = Omit<UpdateItemCommandInput, "TableName">;
 
 export type UpdateItemOptions<T> = {
-  updateKeys?: Keys<T>;
-  removeKeys?: Keys<T>;
-  dynamodbOptions?: DynamoDBOptions;
+	updateKeys?: Keys<T>;
+	removeKeys?: Keys<T>;
+	dynamodbOptions?: DynamoDBOptions;
 };
 
 export type UpdateItemFunction<Attributes extends DynamoDBTypes> = (
-  item: Attributes,
-  options: UpdateItemOptions<Attributes>
+	item: Attributes,
+	options: UpdateItemOptions<Attributes>,
 ) => Promise<Attributes | undefined>;
 
 /**
@@ -37,38 +37,38 @@ export type UpdateItemFunction<Attributes extends DynamoDBTypes> = (
  * @returns Function to update item
  */
 export const createUpdateItem = <Attributes extends DynamoDBTypes>(
-  tablename: string,
-  partitionKeyName: keyof Attributes,
-  sortKeyName?: keyof Attributes
+	tablename: string,
+	partitionKeyName: keyof Attributes,
+	sortKeyName?: keyof Attributes,
 ): UpdateItemFunction<Attributes> => {
-  return async (item, options) => {
-    const updateOptions = createUpdateOptions(
-      partitionKeyName,
-      sortKeyName,
-      item,
-      options
-    );
-    if (!updateOptions) {
-      return item;
-    }
+	return async (item, options) => {
+		const updateOptions = createUpdateOptions(
+			partitionKeyName,
+			sortKeyName,
+			item,
+			options,
+		);
+		if (!updateOptions) {
+			return item;
+		}
 
-    const updatedItemSuccess = await updateItem(tablename, {
-      ...options.dynamodbOptions,
-      ...updateOptions,
-    });
+		const updatedItemSuccess = await updateItem(tablename, {
+			...options.dynamodbOptions,
+			...updateOptions,
+		});
 
-    if (!updatedItemSuccess) {
-      return undefined;
-    }
+		if (!updatedItemSuccess) {
+			return undefined;
+		}
 
-    // remove the values for the updated item
-    const removeKeys = options.removeKeys ?? [];
-    for (const key of removeKeys) {
-      delete item[key];
-    }
+		// remove the values for the updated item
+		const removeKeys = options.removeKeys ?? [];
+		for (const key of removeKeys) {
+			delete item[key];
+		}
 
-    return item;
-  };
+		return item;
+	};
 };
 
 /**
@@ -78,16 +78,16 @@ export const createUpdateItem = <Attributes extends DynamoDBTypes>(
  * @returns DDB String to update the DB
  */
 export const createUpdateExpression = (keys: string[]): string | undefined => {
-  if (keys.length === 0) {
-    return;
-  }
+	if (keys.length === 0) {
+		return;
+	}
 
-  const exp = keys.map(
-    key =>
-      `${expressionAttributeNameKey(key)} = ${expressionAttributeValueKey(key)}`
-  );
+	const exp = keys.map(
+		(key) =>
+			`${expressionAttributeNameKey(key)} = ${expressionAttributeValueKey(key)}`,
+	);
 
-  return `SET ${exp.join(' , ')}`;
+	return `SET ${exp.join(" , ")}`;
 };
 
 /**
@@ -97,13 +97,13 @@ export const createUpdateExpression = (keys: string[]): string | undefined => {
  * @returns DDB String to remove from DB
  */
 export const createRemoveExpression = (keys: string[]): string | undefined => {
-  if (keys.length === 0) {
-    return;
-  }
+	if (keys.length === 0) {
+		return;
+	}
 
-  const expression = keys.map(expressionAttributeNameKey);
+	const expression = keys.map(expressionAttributeNameKey);
 
-  return `REMOVE ${expression.join(' , ')}`;
+	return `REMOVE ${expression.join(" , ")}`;
 };
 
 /**
@@ -113,60 +113,60 @@ export const createRemoveExpression = (keys: string[]): string | undefined => {
  * @returns Update options
  */
 export function createUpdateOptions<Attributes extends DynamoDBTypes>(
-  partitionKeyName: keyof Attributes,
-  sortKeyName: keyof Attributes | undefined,
-  updatedObject: Attributes,
-  options: UpdateItemOptions<Attributes>
+	partitionKeyName: keyof Attributes,
+	sortKeyName: keyof Attributes | undefined,
+	updatedObject: Attributes,
+	options: UpdateItemOptions<Attributes>,
 ): DynamoDBOptions | undefined {
-  if (!options.removeKeys && !options.updateKeys) {
-    return;
-  }
+	if (!options.removeKeys && !options.updateKeys) {
+		return;
+	}
 
-  const updateKeys = options.updateKeys ?? [];
-  const removeKeys = options.removeKeys ?? [];
+	const updateKeys = options.updateKeys ?? [];
+	const removeKeys = options.removeKeys ?? [];
 
-  // the actual db keys are mapped on to placeholders so we dont accidentally use reserved keyword
-  const ExpressionAttributeNames = expressionAttributeNames([
-    ...updateKeys,
-    ...removeKeys,
-  ]);
+	// the actual db keys are mapped on to placeholders so we dont accidentally use reserved keyword
+	const ExpressionAttributeNames = expressionAttributeNames([
+		...updateKeys,
+		...removeKeys,
+	]);
 
-  // the values are mapped to strings
-  const ExpressionAttributeValues =
-    updateKeys.length > 0
-      ? {
-          ExpressionAttributeValues: marshall(
-            expressionAttributeValues(
-              updateKeys.reduce<Record<string, NativeAttributeValue>>(
-                (acc, key) => {
-                  acc[key] = updatedObject[key];
-                  return acc;
-                },
-                {}
-              )
-            )
-          ),
-        }
-      : {};
+	// the values are mapped to strings
+	const ExpressionAttributeValues =
+		updateKeys.length > 0
+			? {
+					ExpressionAttributeValues: marshall(
+						expressionAttributeValues(
+							updateKeys.reduce<Record<string, NativeAttributeValue>>(
+								(acc, key) => {
+									acc[key] = updatedObject[key];
+									return acc;
+								},
+								{},
+							),
+						),
+					),
+				}
+			: {};
 
-  // the update update expression creates SET #attributeNames = :attributeValue
-  const UpdateUpdateExpression = createUpdateExpression(updateKeys) ?? '';
+	// the update update expression creates SET #attributeNames = :attributeValue
+	const UpdateUpdateExpression = createUpdateExpression(updateKeys) ?? "";
 
-  // the remove update expression creates Remove #attributeNames, ...
-  const RemoveUpdateExpression = createRemoveExpression(removeKeys) ?? '';
+	// the remove update expression creates Remove #attributeNames, ...
+	const RemoveUpdateExpression = createRemoveExpression(removeKeys) ?? "";
 
-  const key = updatedObject[partitionKeyName];
-  const sortKey = sortKeyName ? updatedObject[sortKeyName] : undefined;
+	const key = updatedObject[partitionKeyName];
+	const sortKey = sortKeyName ? updatedObject[sortKeyName] : undefined;
 
-  return {
-    Key: {
-      [partitionKeyName]: convertToAttr(key),
-      ...maybeMerge(sortKeyName, maybeConvertToAttr(sortKey)),
-    },
-    ExpressionAttributeNames,
-    UpdateExpression: `${UpdateUpdateExpression} ${RemoveUpdateExpression}`,
-    ...ExpressionAttributeValues,
-  };
+	return {
+		Key: {
+			[partitionKeyName]: convertToAttr(key),
+			...maybeMerge(sortKeyName, maybeConvertToAttr(sortKey)),
+		},
+		ExpressionAttributeNames,
+		UpdateExpression: `${UpdateUpdateExpression} ${RemoveUpdateExpression}`,
+		...ExpressionAttributeValues,
+	};
 }
 
 /**
@@ -176,19 +176,19 @@ export function createUpdateOptions<Attributes extends DynamoDBTypes>(
  * @returns Boolean if sucess
  */
 export const updateItem = async (
-  tableName: string,
-  input: DynamoDBOptions
+	tableName: string,
+	input: DynamoDBOptions,
 ): Promise<boolean> => {
-  const command = new UpdateItemCommand({
-    ...input,
-    TableName: tableName,
-  });
+	const command = new UpdateItemCommand({
+		...input,
+		TableName: tableName,
+	});
 
-  const res = await DDBClient.instance.send(command);
+	const res = await DDBClient.instance.send(command);
 
-  if (res.$metadata.httpStatusCode !== 200) {
-    throw res;
-  }
+	if (res.$metadata.httpStatusCode !== 200) {
+		throw res;
+	}
 
-  return true;
+	return true;
 };

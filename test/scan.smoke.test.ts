@@ -1,69 +1,69 @@
-import test from 'ava';
+import test from "ava";
 
 import {
-  BatchWriteItemCommand,
-  PutItemCommand,
-  ScanCommand,
-} from '@aws-sdk/client-dynamodb';
-import { convertToNative, marshall } from '@aws-sdk/util-dynamodb';
+	BatchWriteItemCommand,
+	PutItemCommand,
+	ScanCommand,
+} from "@aws-sdk/client-dynamodb";
+import { convertToNative, marshall } from "@aws-sdk/util-dynamodb";
 
-import { createScanItems, DDBClient, NOT } from '../src';
-import { type Attributes, createAttributes, createTable } from './helper/db';
+import { createScanItems, DDBClient, NOT } from "../src";
+import { type Attributes, createAttributes, createTable } from "./helper/db";
 
-test('Scan fetches Items', async t => {
-  const { tablename, destroy } = await createTable({
-    KeySchema: [{ AttributeName: 'pk', KeyType: 'HASH' }],
-    AttributeDefinitions: [{ AttributeName: 'pk', AttributeType: 'S' }],
-    BillingMode: 'PAY_PER_REQUEST',
-  });
+test("Scan fetches Items", async (t) => {
+	const { tablename, destroy } = await createTable({
+		KeySchema: [{ AttributeName: "pk", KeyType: "HASH" }],
+		AttributeDefinitions: [{ AttributeName: "pk", AttributeType: "S" }],
+		BillingMode: "PAY_PER_REQUEST",
+	});
 
-  const scan = createScanItems<Attributes>(tablename);
+	const scan = createScanItems<Attributes>(tablename);
 
-  await DDBClient.instance.send(
-    new BatchWriteItemCommand({
-      RequestItems: {
-        [tablename]: Array.from({ length: 10 }).map((_, i) => ({
-          PutRequest: {
-            Item: marshall({ pk: `pk-${i}` }),
-          },
-        })),
-      },
-    })
-  );
+	await DDBClient.instance.send(
+		new BatchWriteItemCommand({
+			RequestItems: {
+				[tablename]: Array.from({ length: 10 }).map((_, i) => ({
+					PutRequest: {
+						Item: marshall({ pk: `pk-${i}` }),
+					},
+				})),
+			},
+		}),
+	);
 
-  const items = await scan();
+	const items = await scan();
 
-  t.assert(items);
-  t.is(items.length, 10);
+	t.assert(items);
+	t.is(items.length, 10);
 
-  await destroy();
+	await destroy();
 });
 
-test('Scan filters Items', async t => {
-  const { tablename, destroy } = await createTable({
-    KeySchema: [{ AttributeName: 'pk', KeyType: 'HASH' }],
-    AttributeDefinitions: [{ AttributeName: 'pk', AttributeType: 'S' }],
-    BillingMode: 'PAY_PER_REQUEST',
-  });
+test("Scan filters Items", async (t) => {
+	const { tablename, destroy } = await createTable({
+		KeySchema: [{ AttributeName: "pk", KeyType: "HASH" }],
+		AttributeDefinitions: [{ AttributeName: "pk", AttributeType: "S" }],
+		BillingMode: "PAY_PER_REQUEST",
+	});
 
-  const scan = createScanItems<{ pk: string; filter: boolean }>(tablename);
+	const scan = createScanItems<{ pk: string; filter: boolean }>(tablename);
 
-  await DDBClient.instance.send(
-    new BatchWriteItemCommand({
-      RequestItems: {
-        [tablename]: Array.from({ length: 10 }).map((_, i) => ({
-          PutRequest: {
-            Item: marshall({ pk: `pk-${i}`, filter: i % 2 === 0 }),
-          },
-        })),
-      },
-    })
-  );
+	await DDBClient.instance.send(
+		new BatchWriteItemCommand({
+			RequestItems: {
+				[tablename]: Array.from({ length: 10 }).map((_, i) => ({
+					PutRequest: {
+						Item: marshall({ pk: `pk-${i}`, filter: i % 2 === 0 }),
+					},
+				})),
+			},
+		}),
+	);
 
-  const items = await scan({ filterOptions: { filter: NOT(true) } });
+	const items = await scan({ filterOptions: { filter: NOT(true) } });
 
-  t.assert(items);
-  t.is(items.length, 5);
+	t.assert(items);
+	t.is(items.length, 5);
 
-  await destroy();
+	await destroy();
 });

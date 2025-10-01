@@ -1,18 +1,18 @@
 {
-  "compilerOptions": {
-    "composite": true,
-    "strict": true,
-    "module": "CommonJS",
-    "noImplicitAny": true,
-    "removeComments": true,
-    "preserveConstEnums": true,
-    "sourceMap": true,
-    "outDir": "lib",
-    "target": "ESNext",
-    "declaration": true,
-    "sourceRoot": "src",
-    "allowSyntheticDefaultImports": true
-  },
-  "include": ["src"],
-  "references": [{ "path": "../" }]
+	"compilerOptions": {
+		"composite": true,
+		"strict": true,
+		"module": "CommonJS",
+		"noImplicitAny": true,
+		"removeComments": true,
+		"preserveConstEnums": true,
+		"sourceMap": true,
+		"outDir": "lib",
+		"target": "ESNext",
+		"declaration": true,
+		"sourceRoot": "src",
+		"allowSyntheticDefaultImports": true
+	},
+	"include": ["src"],
+	"references": [{ "path": "../" }]
 }

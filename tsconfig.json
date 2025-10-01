@@ -1,21 +1,21 @@
 {
-  "compilerOptions": {
-    "strictNullChecks": true,
-    "composite": true,
-    "module": "CommonJS",
-    "noImplicitAny": true,
-    "removeComments": true,
-    "preserveConstEnums": true,
-    "sourceMap": true,
-    "outDir": "lib",
-    "target": "ESNext",
-    "declaration": true,
-    "rootDir": "src",
-    "strict": true,
-    "resolveJsonModule": true,
-    "esModuleInterop": true,
-    "lib": ["ESNext"]
-  },
-  "exclude": ["example", "lib", "node_modules", "test"],
-  "include": ["src"]
+	"compilerOptions": {
+		"strictNullChecks": true,
+		"composite": true,
+		"module": "CommonJS",
+		"noImplicitAny": true,
+		"removeComments": true,
+		"preserveConstEnums": true,
+		"sourceMap": true,
+		"outDir": "lib",
+		"target": "ESNext",
+		"declaration": true,
+		"rootDir": "src",
+		"strict": true,
+		"resolveJsonModule": true,
+		"esModuleInterop": true,
+		"lib": ["ESNext"]
+	},
+	"exclude": ["example", "lib", "node_modules", "test"],
+	"include": ["src"]
 }

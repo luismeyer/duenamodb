@@ -17,19 +17,22 @@ jobs:
       - name: 🛠 Setup node
         uses: actions/setup-node@v3
         with:
-          node-version: '16.x'
+          node-version: "16.x"
 
-      - uses: pnpm/action-setup@v2
-        name: 📥 Download deps
+      - name: 📥 Download deps
+        uses: pnpm/action-setup@v2
         with:
           version: 8
           run_install: true
 
+      - name: 🐳 Docker
+        uses: docker/setup-compose-action@v1
+
       - name: 🧪 Test
         run: pnpm test
         env:
-          AWS_ACCESS_KEY_ID: 'test'
-          AWS_SECRET_ACCESS_KEY: 'test'
+          AWS_ACCESS_KEY_ID: "test"
+          AWS_SECRET_ACCESS_KEY: "test"
 
   build:
     name: 🏋️‍♀️ Build
@@ -44,7 +47,7 @@ jobs:
       - name: 🛠 Setup node
         uses: actions/setup-node@v3
         with:
-          node-version: '16.x'
+          node-version: "16.x"
 
       - uses: pnpm/action-setup@v2
         name: 📥 Download deps
@@ -55,8 +58,8 @@ jobs:
       - name: 🏗 Build
         run: pnpm build
 
-  prettier:
-    name: 🪞 Prettier
+  format:
+    name: 🪞 Format
     runs-on: ubuntu-latest
     steps:
       - name: 🛑 Cancel Previous Runs
@@ -68,7 +71,7 @@ jobs:
       - name: 🛠 Setup node
         uses: actions/setup-node@v3
         with:
-          node-version: '16.x'
+          node-version: "16.x"
 
       - uses: pnpm/action-setup@v2
         name: 📥 Download deps
@@ -76,13 +79,13 @@ jobs:
           version: 8
           run_install: true
 
-      - name: 🏗 Prettier
-        run: pnpm prettier
+      - name: 🏗 Format
+        run: pnpm format
 
   bump:
     name: ⬆️ Bump Version
     runs-on: ubuntu-latest
-    needs: [prettier, build, ava]
+    needs: [format, build, ava]
     steps:
       - name: 🛑 Cancel Previous Runs
         uses: styfle/cancel-workflow-action@0.9.1
@@ -92,11 +95,11 @@ jobs:
 
       - name: 🛸 Version Bump
         id: version-bump
-        uses: 'phips28/gh-action-bump-version@master'
+        uses: "phips28/gh-action-bump-version@master"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag-prefix: 'v'
+          tag-prefix: "v"
 
       - name: ℹ️ New Version
         env:

@@ -1,17 +1,17 @@
 import {
-  PutItemCommand,
-  type PutItemCommandInput,
-} from '@aws-sdk/client-dynamodb';
-import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
+	PutItemCommand,
+	type PutItemCommandInput,
+} from "@aws-sdk/client-dynamodb";
+import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 
-import { DDBClient } from './client';
-import type { DynamoDBTypes } from './types';
+import { DDBClient } from "./client";
+import type { DynamoDBTypes } from "./types";
 
-type PutItemOptions = Omit<PutItemCommandInput, 'TableName' | 'Item'>;
+type PutItemOptions = Omit<PutItemCommandInput, "TableName" | "Item">;
 
 export type PutItemFunction<Attributes extends DynamoDBTypes> = (
-  item: Attributes,
-  options?: PutItemOptions
+	item: Attributes,
+	options?: PutItemOptions,
 ) => Promise<Attributes>;
 
 /**
@@ -20,9 +20,9 @@ export type PutItemFunction<Attributes extends DynamoDBTypes> = (
  * @returns Function that puts item
  */
 export const createPutItem = <Attributes extends DynamoDBTypes>(
-  tablename: string
+	tablename: string,
 ): PutItemFunction<Attributes> => {
-  return (item, options = {}) => putItem(tablename, marshall(item), options);
+	return (item, options = {}) => putItem(tablename, marshall(item), options);
 };
 
 /**
@@ -33,25 +33,25 @@ export const createPutItem = <Attributes extends DynamoDBTypes>(
  * @returns The input if successfull
  */
 export const putItem = async <T>(
-  tableName: string,
-  input: PutItemCommandInput['Item'],
-  options: PutItemOptions
+	tableName: string,
+	input: PutItemCommandInput["Item"],
+	options: PutItemOptions,
 ): Promise<T> => {
-  if (!input) {
-    throw new Error('Missing put item input');
-  }
+	if (!input) {
+		throw new Error("Missing put item input");
+	}
 
-  const command = new PutItemCommand({
-    ...options,
-    Item: input,
-    TableName: tableName,
-  });
+	const command = new PutItemCommand({
+		...options,
+		Item: input,
+		TableName: tableName,
+	});
 
-  const res = await DDBClient.instance.send(command);
+	const res = await DDBClient.instance.send(command);
 
-  if (res.$metadata.httpStatusCode !== 200) {
-    throw res;
-  }
+	if (res.$metadata.httpStatusCode !== 200) {
+		throw res;
+	}
 
-  return unmarshall(input) as T;
+	return unmarshall(input) as T;
 };

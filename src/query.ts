@@ -1,31 +1,31 @@
-import { QueryCommand, type QueryCommandInput } from '@aws-sdk/client-dynamodb';
-import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
+import { QueryCommand, type QueryCommandInput } from "@aws-sdk/client-dynamodb";
+import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 
-import { DDBClient } from './client';
-import { createConditionExpression, type FilterOptions } from './expression';
-import { maybeMerge } from './object';
-import type { DynamoDBTypes, PK, SK } from './types';
+import { DDBClient } from "./client";
+import { createConditionExpression, type FilterOptions } from "./expression";
+import { maybeMerge } from "./object";
+import type { DynamoDBTypes, PK, SK } from "./types";
 
 type CreateQueryOptions<Attributes extends DynamoDBTypes> = {
-  indexName?: string;
-  sortKeyName?: keyof Attributes;
+	indexName?: string;
+	sortKeyName?: keyof Attributes;
 };
 
-type QueryDynamoDBOptions = Omit<QueryCommandInput, 'TableName'>;
+type QueryDynamoDBOptions = Omit<QueryCommandInput, "TableName">;
 
 export type QueryOptions<Attributes extends DynamoDBTypes, TSK extends SK> = {
-  sortKey?: TSK;
-  filterOptions?: FilterOptions<Attributes>;
-  dynamodbOptions?: QueryDynamoDBOptions;
+	sortKey?: TSK;
+	filterOptions?: FilterOptions<Attributes>;
+	dynamodbOptions?: QueryDynamoDBOptions;
 };
 
 export type QueryItemsFunction<
-  Attributes extends DynamoDBTypes,
-  TPK extends PK,
-  TSK extends SK = undefined
+	Attributes extends DynamoDBTypes,
+	TPK extends PK,
+	TSK extends SK = undefined,
 > = (
-  key: TPK,
-  options?: QueryOptions<Attributes, TSK>
+	key: TPK,
+	options?: QueryOptions<Attributes, TSK>,
 ) => Promise<Attributes[]>;
 
 /**
@@ -35,34 +35,34 @@ export type QueryItemsFunction<
  * @returns Function to query table
  */
 export const createQueryItems = <
-  Attributes extends DynamoDBTypes,
-  TPK extends PK,
-  TSK extends SK = undefined
+	Attributes extends DynamoDBTypes,
+	TPK extends PK,
+	TSK extends SK = undefined,
 >(
-  tablename: string,
-  partitionKeyName: keyof Attributes,
-  options: CreateQueryOptions<Attributes>
+	tablename: string,
+	partitionKeyName: keyof Attributes,
+	options: CreateQueryOptions<Attributes>,
 ): QueryItemsFunction<Attributes, TPK, TSK> => {
-  const { indexName, sortKeyName } = options;
+	const { indexName, sortKeyName } = options;
 
-  return (key, options = {}) => {
-    const keyOptions = {
-      [partitionKeyName]: key,
+	return (key, options = {}) => {
+		const keyOptions = {
+			[partitionKeyName]: key,
 
-      ...maybeMerge(sortKeyName, options.sortKey),
-    } as Partial<Attributes>;
+			...maybeMerge(sortKeyName, options.sortKey),
+		} as Partial<Attributes>;
 
-    const queryOptions = createQueryOptions(
-      keyOptions,
-      indexName,
-      options.filterOptions
-    );
+		const queryOptions = createQueryOptions(
+			keyOptions,
+			indexName,
+			options.filterOptions,
+		);
 
-    return queryItems(tablename, {
-      ...options.dynamodbOptions,
-      ...queryOptions,
-    });
-  };
+		return queryItems(tablename, {
+			...options.dynamodbOptions,
+			...queryOptions,
+		});
+	};
 };
 
 /**
@@ -73,32 +73,32 @@ export const createQueryItems = <
  * @returns Query Options
  */
 export const createQueryOptions = <Attributes extends DynamoDBTypes>(
-  keyOptions: Partial<Attributes>,
-  index?: string,
-  filterOptions?: FilterOptions<Attributes>
+	keyOptions: Partial<Attributes>,
+	index?: string,
+	filterOptions?: FilterOptions<Attributes>,
 ): Partial<QueryDynamoDBOptions> => {
-  // DDB key/index condition structs
-  const {
-    attributeNames: keyNames,
-    attributeValues: keyValues,
-    expression: keyExpression,
-  } = createConditionExpression(keyOptions);
+	// DDB key/index condition structs
+	const {
+		attributeNames: keyNames,
+		attributeValues: keyValues,
+		expression: keyExpression,
+	} = createConditionExpression(keyOptions);
 
-  // DDB filter structs that run after the key condition
-  const {
-    attributeNames: filterNames,
-    attributeValues: filterValues,
-    expression: filterExpression,
-  } = createConditionExpression(filterOptions ?? {});
+	// DDB filter structs that run after the key condition
+	const {
+		attributeNames: filterNames,
+		attributeValues: filterValues,
+		expression: filterExpression,
+	} = createConditionExpression(filterOptions ?? {});
 
-  return {
-    IndexName: index,
-    ExpressionAttributeValues: marshall({ ...keyValues, ...filterValues }),
-    ExpressionAttributeNames: { ...keyNames, ...filterNames },
-    KeyConditionExpression: keyExpression,
+	return {
+		IndexName: index,
+		ExpressionAttributeValues: marshall({ ...keyValues, ...filterValues }),
+		ExpressionAttributeNames: { ...keyNames, ...filterNames },
+		KeyConditionExpression: keyExpression,
 
-    ...maybeMerge('FilterExpression', filterExpression),
-  };
+		...maybeMerge("FilterExpression", filterExpression),
+	};
 };
 
 /**
@@ -109,31 +109,34 @@ export const createQueryOptions = <Attributes extends DynamoDBTypes>(
  * @returns Queried items
  */
 export const queryItems = async <T>(
-  tablename: string,
-  options: QueryDynamoDBOptions
+	tablename: string,
+	options: QueryDynamoDBOptions,
 ): Promise<T[]> => {
-  const command = new QueryCommand({
-    ...options,
-    TableName: tablename,
-  });
+	const command = new QueryCommand({
+		...options,
+		TableName: tablename,
+	});
 
-  const res = await DDBClient.instance.send(command);
+	const res = await DDBClient.instance.send(command);
 
-  if (res.$metadata.httpStatusCode !== 200) {
-    throw res;
-  }
+	if (res.$metadata.httpStatusCode !== 200) {
+		throw res;
+	}
 
-  if (!res.Items) {
-    return [];
-  }
+	if (!res.Items) {
+		return [];
+	}
 
-  // query the database until 'LastEvaluatedKey' is empty
-  const paginatedResults = res.LastEvaluatedKey
-    ? await queryItems<T>(tablename, {
-        ...options,
-        ExclusiveStartKey: res.LastEvaluatedKey,
-      })
-    : [];
+	// query the database until 'LastEvaluatedKey' is empty
+	const paginatedResults = res.LastEvaluatedKey
+		? await queryItems<T>(tablename, {
+				...options,
+				ExclusiveStartKey: res.LastEvaluatedKey,
+			})
+		: [];
 
-  return [...paginatedResults, ...res.Items.map(item => unmarshall(item) as T)];
+	return [
+		...paginatedResults,
+		...res.Items.map((item) => unmarshall(item) as T),
+	];
 };

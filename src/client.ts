@@ -1,24 +1,24 @@
 import {
-  DynamoDBClient,
-  type DynamoDBClientConfig,
-} from '@aws-sdk/client-dynamodb';
+	DynamoDBClient,
+	type DynamoDBClientConfig,
+} from "@aws-sdk/client-dynamodb";
 
 export class DDBClient {
-  private static _client: DynamoDBClient;
+	private static _client: DynamoDBClient;
 
-  private constructor() {}
+	private constructor() {}
 
-  public static params: DynamoDBClientConfig;
+	public static params: DynamoDBClientConfig;
 
-  private static init() {
-    this._client = new DynamoDBClient(this.params);
-  }
+	private static init() {
+		this._client = new DynamoDBClient(this.params);
+	}
 
-  public static get instance() {
-    if (!this._client) {
-      this.init();
-    }
+	public static get instance() {
+		if (!this._client) {
+			this.init();
+		}
 
-    return this._client;
-  }
+		return this._client;
+	}
 }

@@ -1,19 +1,19 @@
-import { ScanCommand, type ScanCommandInput } from '@aws-sdk/client-dynamodb';
-import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
+import { ScanCommand, type ScanCommandInput } from "@aws-sdk/client-dynamodb";
+import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 
-import { DDBClient } from './client';
-import { createConditionExpression, type FilterOptions } from './expression';
-import type { DynamoDBTypes } from './types';
+import { DDBClient } from "./client";
+import { createConditionExpression, type FilterOptions } from "./expression";
+import type { DynamoDBTypes } from "./types";
 
-type DynamoDBOptions = Omit<ScanCommandInput, 'TableName'>;
+type DynamoDBOptions = Omit<ScanCommandInput, "TableName">;
 
 export type ScanOptions<Attributes extends DynamoDBTypes> = {
-  filterOptions?: FilterOptions<Attributes>;
-  dynamodbOptions?: DynamoDBOptions;
+	filterOptions?: FilterOptions<Attributes>;
+	dynamodbOptions?: DynamoDBOptions;
 };
 
 export type ScanItemsFunction<Attributes extends DynamoDBTypes> = (
-  options?: ScanOptions<Attributes>
+	options?: ScanOptions<Attributes>,
 ) => Promise<Attributes[]>;
 
 /**
@@ -22,16 +22,16 @@ export type ScanItemsFunction<Attributes extends DynamoDBTypes> = (
  * @returns Function that scans table
  */
 export const createScanItems = <Attributes extends DynamoDBTypes>(
-  tablename: string
+	tablename: string,
 ): ScanItemsFunction<Attributes> => {
-  return (options = {}) => {
-    const scanOptions = createScanOptions(options.filterOptions);
+	return (options = {}) => {
+		const scanOptions = createScanOptions(options.filterOptions);
 
-    return scanItems(tablename, {
-      ...scanOptions,
-      ...options.dynamodbOptions,
-    });
-  };
+		return scanItems(tablename, {
+			...scanOptions,
+			...options.dynamodbOptions,
+		});
+	};
 };
 
 /**
@@ -40,24 +40,24 @@ export const createScanItems = <Attributes extends DynamoDBTypes>(
  * @returns DDB structs
  */
 export const createScanOptions = <Attributes extends DynamoDBTypes>(
-  filterOptions?: FilterOptions<Attributes>
+	filterOptions?: FilterOptions<Attributes>,
 ): Partial<DynamoDBOptions> => {
-  if (!filterOptions || Object.keys(filterOptions).length === 0) {
-    return {};
-  }
+	if (!filterOptions || Object.keys(filterOptions).length === 0) {
+		return {};
+	}
 
-  // DDB filter structs that run after the key condition
-  const {
-    attributeNames: filterNames,
-    attributeValues: filterValues,
-    expression: filterExpression,
-  } = createConditionExpression(filterOptions);
+	// DDB filter structs that run after the key condition
+	const {
+		attributeNames: filterNames,
+		attributeValues: filterValues,
+		expression: filterExpression,
+	} = createConditionExpression(filterOptions);
 
-  return {
-    ExpressionAttributeValues: { ...marshall(filterValues) },
-    ExpressionAttributeNames: { ...filterNames },
-    FilterExpression: filterExpression,
-  };
+	return {
+		ExpressionAttributeValues: { ...marshall(filterValues) },
+		ExpressionAttributeNames: { ...filterNames },
+		FilterExpression: filterExpression,
+	};
 };
 
 /**
@@ -66,31 +66,34 @@ export const createScanOptions = <Attributes extends DynamoDBTypes>(
  * @returns Items from DB
  */
 export const scanItems = async <T>(
-  tablename: string,
-  options: DynamoDBOptions
+	tablename: string,
+	options: DynamoDBOptions,
 ): Promise<T[]> => {
-  const command = new ScanCommand({
-    ...options,
-    TableName: tablename,
-  });
+	const command = new ScanCommand({
+		...options,
+		TableName: tablename,
+	});
 
-  const res = await DDBClient.instance.send(command);
+	const res = await DDBClient.instance.send(command);
 
-  if (res.$metadata.httpStatusCode !== 200) {
-    throw res;
-  }
+	if (res.$metadata.httpStatusCode !== 200) {
+		throw res;
+	}
 
-  if (!res.Items) {
-    return [];
-  }
+	if (!res.Items) {
+		return [];
+	}
 
-  // query the database until 'LastEvaluatedKey' is empty
-  const paginatedResults = res.LastEvaluatedKey
-    ? await scanItems<T>(tablename, {
-        ...options,
-        ExclusiveStartKey: res.LastEvaluatedKey,
-      })
-    : [];
+	// query the database until 'LastEvaluatedKey' is empty
+	const paginatedResults = res.LastEvaluatedKey
+		? await scanItems<T>(tablename, {
+				...options,
+				ExclusiveStartKey: res.LastEvaluatedKey,
+			})
+		: [];
 
-  return [...paginatedResults, ...res.Items.map(item => unmarshall(item) as T)];
+	return [
+		...paginatedResults,
+		...res.Items.map((item) => unmarshall(item) as T),
+	];
 };
