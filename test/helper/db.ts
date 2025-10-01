@@ -1,4 +1,8 @@
-import { CreateTableCommand } from '@aws-sdk/client-dynamodb';
+import {
+  CreateTableCommand,
+  DeleteTableCommand,
+  type CreateTableCommandInput,
+} from '@aws-sdk/client-dynamodb';
 
 import { DDBClient } from '../../src';
 import { randomNumber, randomTableName } from './random';
@@ -26,9 +30,9 @@ export const createAttributes = (options?: {
   };
 };
 
-export const connectToDynamoDB = async (
-  tablename = randomTableName(),
-  indexname = 'index-' + tablename
+export const createTable = async (
+  input: Omit<CreateTableCommandInput, 'TableName'>,
+  tablename = randomTableName()
 ) => {
   DDBClient.params = {
     region: 'localhost',
@@ -43,29 +47,19 @@ export const connectToDynamoDB = async (
     await DDBClient.instance.send(
       new CreateTableCommand({
         TableName: tablename,
-        KeySchema: [{ AttributeName: 'id', KeyType: 'HASH' }],
-        ProvisionedThroughput: {
-          ReadCapacityUnits: 1,
-          WriteCapacityUnits: 1,
-        },
-        AttributeDefinitions: [
-          { AttributeName: 'id', AttributeType: 'S' },
-          { AttributeName: 'age', AttributeType: 'N' },
-        ],
-        GlobalSecondaryIndexes: [
-          {
-            IndexName: indexname,
-            KeySchema: [{ AttributeName: 'age', KeyType: 'HASH' }],
-            Projection: { ProjectionType: 'ALL' },
-            ProvisionedThroughput: {
-              ReadCapacityUnits: 1,
-              WriteCapacityUnits: 1,
-            },
-          },
-        ],
+        ...input,
       })
     );
+
+    return {
+      tablename,
+      destroy: () =>
+        DDBClient.instance.send(
+          new DeleteTableCommand({ TableName: tablename })
+        ),
+    };
   } catch (error) {
     console.error('Create table error', error);
+    throw error;
   }
 };

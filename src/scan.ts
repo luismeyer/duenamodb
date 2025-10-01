@@ -1,9 +1,9 @@
-import { ScanCommand, ScanCommandInput } from '@aws-sdk/client-dynamodb';
+import { ScanCommand, type ScanCommandInput } from '@aws-sdk/client-dynamodb';
 import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
 
 import { DDBClient } from './client';
-import { createConditionExpression, FilterOptions } from './expression';
-import { DynamoDBTypes } from './types';
+import { createConditionExpression, type FilterOptions } from './expression';
+import type { DynamoDBTypes } from './types';
 
 type DynamoDBOptions = Omit<ScanCommandInput, 'TableName'>;
 

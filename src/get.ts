@@ -1,17 +1,27 @@
-import { GetItemCommand, GetItemCommandInput } from '@aws-sdk/client-dynamodb';
+import {
+  GetItemCommand,
+  type GetItemCommandInput,
+} from '@aws-sdk/client-dynamodb';
 import { convertToAttr, unmarshall } from '@aws-sdk/util-dynamodb';
 
 import { DDBClient } from './client';
-import { DynamoDBTypes, PK } from './types';
+import type { DynamoDBTypes, PK, SK } from './types';
+import { maybeConvertToAttr, maybeMerge } from './object';
 
-type GetItemOptions = Omit<GetItemCommandInput, 'TableName' | 'Key'>;
+type GetDynamoOptions = Omit<GetItemCommandInput, 'TableName' | 'Key'>;
+
+type GetItemOptions<TSK extends SK> = {
+  sortKey?: TSK;
+  dynamodbOptions?: GetDynamoOptions;
+};
 
 export type GetItemFunction<
   Attributes extends DynamoDBTypes,
-  PartitionKey extends PK
+  TPK extends PK,
+  TSK extends SK = undefined
 > = (
-  key: PartitionKey,
-  options?: GetItemOptions
+  key: TPK,
+  options?: GetItemOptions<TSK>
 ) => Promise<Attributes | undefined>;
 
 /**
@@ -22,13 +32,23 @@ export type GetItemFunction<
  */
 export const createGetItem = <
   Attributes extends DynamoDBTypes,
-  PartitionKey extends PK
+  TPK extends PK,
+  TSK extends SK = undefined
 >(
   tablename: string,
-  partitionKeyName: keyof Attributes
-): GetItemFunction<Attributes, PartitionKey> => {
-  return (key, options = {}) =>
-    getItem(tablename, { [partitionKeyName]: convertToAttr(key) }, options);
+  partitionKeyName: keyof Attributes,
+  sortKeyName?: keyof Attributes
+): GetItemFunction<Attributes, TPK, TSK> => {
+  return async (key, options = {}) => {
+    return getItem(
+      tablename,
+      {
+        [partitionKeyName]: convertToAttr(key),
+        ...maybeMerge(sortKeyName, maybeConvertToAttr(options.sortKey)),
+      },
+      options.dynamodbOptions ?? {}
+    );
+  };
 };
 
 /**
@@ -41,7 +61,7 @@ export const createGetItem = <
 export const getItem = async <T>(
   tablename: string,
   key: GetItemCommandInput['Key'],
-  options: GetItemOptions
+  options?: GetDynamoOptions
 ): Promise<T | undefined> => {
   const command = new GetItemCommand({
     ...options,

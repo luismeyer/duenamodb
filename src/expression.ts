@@ -1,6 +1,5 @@
-import { NativeAttributeValue } from '@aws-sdk/util-dynamodb';
-import { Keys } from './object';
-import { DynamoDBTypes } from './types';
+import type { NativeAttributeValue } from '@aws-sdk/util-dynamodb';
+import type { DynamoDBTypes } from './types';
 
 /**
  * Turns a string key into a DDB-name-key
@@ -31,13 +30,58 @@ export const expressionAttributeNames = (
     return;
   }
 
-  return names.reduce<Record<string, string>>(
-    (acc, key) => ({
-      ...acc,
-      [expressionAttributeNameKey(key)]: key,
-    }),
-    {}
-  );
+  return names.reduce<Record<string, string>>((acc, key) => {
+    acc[expressionAttributeNameKey(key)] = key;
+    return acc;
+  }, {});
+};
+
+const expressionAttributeValueInKey = (key: string, index: number) =>
+  expressionAttributeValueKey(`${key}_in${index}`);
+
+const expressionAttributeValueNotKey = (key: string) =>
+  expressionAttributeValueKey(`not_${key}`);
+
+const andKey = (key: string, index: number) => `${key}_and${index}`;
+
+const transformExpressionAttributeEntry = <Attributes extends DynamoDBTypes>(
+  key: string,
+  value: Attributes[string] | DuenamoExpression<Attributes[string]> | undefined
+): Record<string, NativeAttributeValue> => {
+  if (!isDuenamoExpression(value)) {
+    return { [expressionAttributeValueKey(key)]: value };
+  }
+
+  if (value.duenamoType === 'not') {
+    return { [expressionAttributeValueNotKey(key)]: value.value };
+  }
+
+  if (value.duenamoType === 'in') {
+    const result: Record<string, NativeAttributeValue> = {};
+
+    for (let i = 0; i < value.value.length; i++) {
+      const arrayValue = value.value[i];
+      result[expressionAttributeValueInKey(key, i)] = arrayValue;
+    }
+
+    return result;
+  }
+
+  if (value.duenamoType === 'and') {
+    let result: Record<string, NativeAttributeValue> = {};
+
+    for (let i = 0; i < value.value.length; i++) {
+      const arrayValue = value.value[i];
+      result = {
+        ...result,
+        ...transformExpressionAttributeEntry(andKey(key, i), arrayValue),
+      };
+    }
+
+    return result;
+  }
+
+  return {};
 };
 
 /**
@@ -59,34 +103,59 @@ export const expressionAttributeValues = <
     return;
   }
 
-  const result: Record<string, NativeAttributeValue> = {};
+  let result: Record<string, NativeAttributeValue> = {};
 
   for (const key of keys) {
     const value = options[key];
-
-    if (!isDuenamoExpression(value)) {
-      result[expressionAttributeValueKey(key)] = value;
-
-      continue;
-    }
-
-    if (value.duenamoType === 'not') {
-      result[expressionAttributeValueKey(key)] = value.value;
-
-      continue;
-    }
-
-    if (value.duenamoType === 'in') {
-      for (let i = 0; i < value.value.length; i++) {
-        const arrayValue = value.value[i];
-        result[expressionAttributeValueKey(`${key}_${i}`)] = arrayValue;
-      }
-
-      continue;
-    }
+    result = {
+      ...result,
+      ...transformExpressionAttributeEntry<Attributes>(key, value),
+    };
   }
 
   return result;
+};
+
+const transformConditionExpressionEntry = <Attributes extends DynamoDBTypes>(
+  key: string,
+  value: Attributes[string] | DuenamoExpression<Attributes[string]> | undefined,
+  nameKey: string
+): string => {
+  if (!isDuenamoExpression(value)) {
+    const valueKey = expressionAttributeValueKey(key);
+    return `(${nameKey} = ${valueKey})`;
+  }
+
+  if (value.duenamoType === 'not') {
+    const valueKey = expressionAttributeValueNotKey(key);
+    return `(${nameKey} <> ${valueKey})`;
+  }
+
+  if (value.duenamoType === 'in') {
+    const result = [];
+
+    for (let i = 0; i < value.value.length; i++) {
+      result.push(expressionAttributeValueInKey(key, i));
+    }
+
+    return `(${nameKey} IN (${result.join(', ')}))`;
+  }
+
+  if (value.duenamoType === 'and') {
+    const result = [];
+
+    for (let i = 0; i < value.value.length; i++) {
+      const arrayValue = value.value[i];
+
+      result.push(
+        transformConditionExpressionEntry(andKey(key, i), arrayValue, nameKey)
+      );
+    }
+
+    return `(${result.join(' AND ')})`;
+  }
+
+  return '';
 };
 
 /**
@@ -113,31 +182,8 @@ export const conditionExpression = <
     const value = options[key];
 
     const nameKey = expressionAttributeNameKey(key);
-    const valueKey = expressionAttributeValueKey(key);
 
-    if (!isDuenamoExpression(value)) {
-      array.push(`${nameKey} = ${valueKey}`);
-
-      continue;
-    }
-
-    if (value.duenamoType === 'not') {
-      array.push(`${nameKey} <> ${valueKey}`);
-
-      continue;
-    }
-
-    if (value.duenamoType === 'in') {
-      const inArray: string[] = [];
-
-      for (let i = 0; i < value.value.length; i++) {
-        inArray.push(expressionAttributeValueKey(`${key}_${i}`));
-      }
-
-      array.push(`${nameKey} IN (${inArray.join(', ')})`);
-
-      continue;
-    }
+    array.push(transformConditionExpressionEntry(key, value, nameKey));
   }
 
   return array.join(' and ');
@@ -156,9 +202,9 @@ type NotExpression<Value extends NativeAttributeValue> = {
   value: Value;
 };
 
-export const NOT = <Attribute extends NativeAttributeValue>(
-  value: Attribute
-): NotExpression<Attribute> => {
+export const NOT = <Value extends NativeAttributeValue>(
+  value: Value
+): NotExpression<Value> => {
   return { duenamoType: 'not', value };
 };
 
@@ -167,18 +213,33 @@ type InExpression<Value extends NativeAttributeValue> = {
   value: Value[];
 };
 
-export const IN = <Attribute extends NativeAttributeValue>(
-  ...value: Attribute[]
-): InExpression<Attribute> => {
+export const IN = <Value extends NativeAttributeValue>(
+  ...value: Value[]
+): InExpression<Value> => {
   return {
     duenamoType: 'in',
     value,
   };
 };
 
+type AndExpression<Value extends NativeAttributeValue> = {
+  duenamoType: 'and';
+  value: DuenamoExpression<Value>[];
+};
+
+export const AND = <Attribute extends NativeAttributeValue>(
+  ...value: DuenamoExpression<Attribute>[]
+): AndExpression<Attribute> => {
+  return {
+    duenamoType: 'and',
+    value,
+  };
+};
+
 type DuenamoExpression<Value extends NativeAttributeValue> =
   | NotExpression<Value>
-  | InExpression<Value>;
+  | InExpression<Value>
+  | AndExpression<Value>;
 
 export type FilterOptions<Attributes extends DynamoDBTypes> = {
   [Key in keyof Attributes]?:

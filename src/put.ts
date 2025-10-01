@@ -1,8 +1,11 @@
-import { PutItemCommand, PutItemCommandInput } from '@aws-sdk/client-dynamodb';
+import {
+  PutItemCommand,
+  type PutItemCommandInput,
+} from '@aws-sdk/client-dynamodb';
 import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
 
 import { DDBClient } from './client';
-import { DynamoDBTypes } from './types';
+import type { DynamoDBTypes } from './types';
 
 type PutItemOptions = Omit<PutItemCommandInput, 'TableName' | 'Item'>;
 
