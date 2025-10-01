@@ -2,7 +2,7 @@ import { createDeleteItem } from './delete';
 import { createGetItem } from './get';
 import { createPutItem } from './put';
 import { createScanItems } from './scan';
-import { DynamoDBTypes, PK } from './types';
+import type { DynamoDBTypes, PK, SK } from './types';
 import { createUpdateItem } from './update';
 
 /**
@@ -13,23 +13,30 @@ import { createUpdateItem } from './update';
  */
 export const createTableFunctions = <
   Attributes extends DynamoDBTypes,
-  PartitionKey extends PK
+  TPK extends PK,
+  TSK extends SK
 >(
   tablename: string,
-  partitionKeyName: string
+  partitionKeyName: string,
+  sortKeyName?: string
 ) => {
   const putItem = createPutItem<Attributes>(tablename);
 
-  const getItem = createGetItem<Attributes, PartitionKey>(
+  const getItem = createGetItem<Attributes, TPK, TSK>(
     tablename,
-    partitionKeyName
+    partitionKeyName,
+    sortKeyName
   );
 
-  const updateItem = createUpdateItem<Attributes>(tablename, partitionKeyName);
+  const updateItem = createUpdateItem<Attributes>(
+    tablename,
+    partitionKeyName,
+    sortKeyName
+  );
 
   const scanItems = createScanItems<Attributes>(tablename);
 
-  const deleteItem = createDeleteItem<Attributes, PartitionKey>(
+  const deleteItem = createDeleteItem<Attributes, TPK>(
     tablename,
     partitionKeyName
   );

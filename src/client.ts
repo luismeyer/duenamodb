@@ -1,4 +1,7 @@
-import { DynamoDBClient, DynamoDBClientConfig } from '@aws-sdk/client-dynamodb';
+import {
+  DynamoDBClient,
+  type DynamoDBClientConfig,
+} from '@aws-sdk/client-dynamodb';
 
 export class DDBClient {
   private static _client: DynamoDBClient;

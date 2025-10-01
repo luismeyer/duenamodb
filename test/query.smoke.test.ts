@@ -1,110 +1,249 @@
 import test from 'ava';
 
-import { PutItemCommand } from '@aws-sdk/client-dynamodb';
+import {
+  BatchWriteItemCommand,
+  PutItemCommand,
+} from '@aws-sdk/client-dynamodb';
 import { marshall } from '@aws-sdk/util-dynamodb';
 
 import { createQueryItems, DDBClient, IN, NOT } from '../src';
-import { Attributes, connectToDynamoDB, createAttributes } from './helper/db';
-import { randomNumber, randomTableName } from './helper/random';
+import { type Attributes, createAttributes, createTable } from './helper/db';
+import { randomNumber, randomString, randomTableName } from './helper/random';
 
-const seed = randomNumber();
-const tablename = randomTableName();
-const indexname = 'index-' + seed;
+test('Query fetches Items', async t => {
+  const indexName = randomString();
 
-const query = createQueryItems<Attributes, number>(tablename, {
-  name: indexname,
-  partitionKeyName: 'age',
-});
+  const { tablename, destroy } = await createTable({
+    KeySchema: [{ AttributeName: 'pk', KeyType: 'HASH' }],
+    AttributeDefinitions: [
+      { AttributeName: 'pk', AttributeType: 'S' },
+      { AttributeName: 'ik', AttributeType: 'N' },
+    ],
+    BillingMode: 'PAY_PER_REQUEST',
+    GlobalSecondaryIndexes: [
+      {
+        IndexName: indexName,
+        KeySchema: [{ AttributeName: 'ik', KeyType: 'HASH' }],
+        Projection: { ProjectionType: 'ALL' },
+        ProvisionedThroughput: { ReadCapacityUnits: 1, WriteCapacityUnits: 1 },
+      },
+    ],
+  });
 
-test.serial.before(async () => {
-  await connectToDynamoDB(tablename, indexname);
-});
-
-test.serial('Query fetches Items', async t => {
-  const attributes = createAttributes();
-
-  await DDBClient.instance.send(
-    new PutItemCommand({ TableName: tablename, Item: marshall(attributes) })
+  const query = createQueryItems<{ pk: string; ik: string }, number>(
+    tablename,
+    'ik',
+    { indexName }
   );
 
-  const items = await query(attributes.age);
+  await DDBClient.instance.send(
+    new BatchWriteItemCommand({
+      RequestItems: {
+        [tablename]: [
+          { PutRequest: { Item: marshall({ pk: '1', ik: 2 }) } },
+          { PutRequest: { Item: marshall({ pk: '2', ik: 2 }) } },
+          { PutRequest: { Item: marshall({ pk: '3', ik: 4 }) } },
+        ],
+      },
+    })
+  );
 
-  t.assert(items);
-  t.deepEqual(items[0], attributes);
-});
-
-test.serial('Query filters Items', async t => {
-  const count = 10;
-
-  for (let i = 0; i < count; i++) {
-    const attributes = createAttributes({
-      name: String(seed + (i % 2)),
-      age: seed,
-    });
-
-    await DDBClient.instance.send(
-      new PutItemCommand({ TableName: tablename, Item: marshall(attributes) })
-    );
-  }
-
-  const items = await query(seed, { filterOptions: { name: String(seed) } });
-
-  t.assert(items);
-  t.is(items.length, count / 2);
-});
-
-test.serial('Query filters Items by NOT expression', async t => {
-  const age = randomNumber();
-  const item1 = createAttributes({ age });
-  const item2 = createAttributes({ age });
-  const item3 = createAttributes({ age });
-
-  await Promise.all([
-    await DDBClient.instance.send(
-      new PutItemCommand({ TableName: tablename, Item: marshall(item1) })
-    ),
-    await DDBClient.instance.send(
-      new PutItemCommand({ TableName: tablename, Item: marshall(item2) })
-    ),
-    await DDBClient.instance.send(
-      new PutItemCommand({ TableName: tablename, Item: marshall(item3) })
-    ),
-  ]);
-
-  const items = await query(age, { filterOptions: { name: NOT(item3.name) } });
+  const items = await query(2);
 
   t.assert(items);
   t.is(items.length, 2);
+  t.deepEqual(items[0], { pk: '1', ik: 2 });
+  t.deepEqual(items[1], { pk: '2', ik: 2 });
 
-  t.true(items.some(({ id }) => item1.id === id));
-  t.true(items.some(({ id }) => item2.id === id));
+  await destroy();
+});
+
+test.serial('Query filters Items', async t => {
+  const indexName = randomString();
+
+  const { tablename, destroy } = await createTable({
+    KeySchema: [{ AttributeName: 'pk', KeyType: 'HASH' }],
+    AttributeDefinitions: [
+      { AttributeName: 'pk', AttributeType: 'S' },
+      { AttributeName: 'ik', AttributeType: 'N' },
+    ],
+    BillingMode: 'PAY_PER_REQUEST',
+    GlobalSecondaryIndexes: [
+      {
+        IndexName: indexName,
+        KeySchema: [{ AttributeName: 'ik', KeyType: 'HASH' }],
+        Projection: { ProjectionType: 'ALL' },
+        ProvisionedThroughput: { ReadCapacityUnits: 1, WriteCapacityUnits: 1 },
+      },
+    ],
+  });
+
+  const query = createQueryItems<
+    { pk: string; ik: string; filter: string },
+    number
+  >(tablename, 'ik', { indexName });
+
+  await DDBClient.instance.send(
+    new BatchWriteItemCommand({
+      RequestItems: {
+        [tablename]: [
+          {
+            PutRequest: {
+              Item: marshall({ pk: '1', ik: 1, filter: 'filter' }),
+            },
+          },
+          ...Array.from({ length: 10 }).map((_, i) => ({
+            PutRequest: {
+              Item: marshall({ pk: `pk-${i}`, ik: 1, filter: 'nofilter' }),
+            },
+          })),
+        ],
+      },
+    })
+  );
+
+  const items = await query(1, { filterOptions: { filter: 'filter' } });
+
+  t.assert(items);
+  t.is(items.length, 1);
+  t.deepEqual(items[0], { pk: '1', ik: 1, filter: 'filter' });
+
+  await destroy();
+});
+
+test.serial('Query filters Items by NOT expression', async t => {
+  const { tablename, destroy } = await createTable({
+    KeySchema: [
+      { AttributeName: 'pk', KeyType: 'HASH' },
+      { AttributeName: 'sk', KeyType: 'RANGE' },
+    ],
+    AttributeDefinitions: [
+      { AttributeName: 'pk', AttributeType: 'S' },
+      { AttributeName: 'sk', AttributeType: 'N' },
+    ],
+    BillingMode: 'PAY_PER_REQUEST',
+  });
+
+  const query = createQueryItems<
+    { pk: string; sk: string; p: number },
+    string,
+    number
+  >(tablename, 'pk', {
+    sortKeyName: 'sk',
+  });
+
+  await DDBClient.instance.send(
+    new BatchWriteItemCommand({
+      RequestItems: {
+        [tablename]: [
+          { PutRequest: { Item: marshall({ pk: '1', sk: 1, p: 1 }) } },
+          { PutRequest: { Item: marshall({ pk: '1', sk: 2, p: 2 }) } },
+          { PutRequest: { Item: marshall({ pk: '3', sk: 3, p: 1 }) } },
+        ],
+      },
+    })
+  );
+
+  const items = await query('1', {
+    filterOptions: { p: NOT(1) },
+  });
+
+  t.assert(items);
+  t.is(items.length, 1);
+
+  t.deepEqual(items[0], { pk: '1', sk: 2, p: 2 });
+
+  await destroy();
 });
 
 test.serial('Query filters Items by IN expression', async t => {
-  const age = randomNumber();
-  const item1 = createAttributes({ age });
-  const item2 = createAttributes({ age });
-  const item3 = createAttributes({ age });
+  const { tablename, destroy } = await createTable({
+    KeySchema: [
+      { AttributeName: 'pk', KeyType: 'HASH' },
+      { AttributeName: 'sk', KeyType: 'RANGE' },
+    ],
+    AttributeDefinitions: [
+      { AttributeName: 'pk', AttributeType: 'S' },
+      { AttributeName: 'sk', AttributeType: 'N' },
+    ],
+    BillingMode: 'PAY_PER_REQUEST',
+  });
 
-  await Promise.all([
-    await DDBClient.instance.send(
-      new PutItemCommand({ TableName: tablename, Item: marshall(item1) })
-    ),
-    await DDBClient.instance.send(
-      new PutItemCommand({ TableName: tablename, Item: marshall(item2) })
-    ),
-    await DDBClient.instance.send(
-      new PutItemCommand({ TableName: tablename, Item: marshall(item3) })
-    ),
-  ]);
+  const query = createQueryItems<
+    { pk: string; sk: number; p: number },
+    string,
+    number
+  >(tablename, 'pk', {
+    sortKeyName: 'sk',
+  });
 
-  const items = await query(age, {
-    filterOptions: { name: IN(item1.name, item2.name) },
+  await DDBClient.instance.send(
+    new BatchWriteItemCommand({
+      RequestItems: {
+        [tablename]: [
+          { PutRequest: { Item: marshall({ pk: '1', sk: 1, p: 1 }) } },
+          { PutRequest: { Item: marshall({ pk: '1', sk: 2, p: 2 }) } },
+          { PutRequest: { Item: marshall({ pk: '1', sk: 3, p: 3 }) } },
+        ],
+      },
+    })
+  );
+
+  const items = await query('1', {
+    filterOptions: { p: IN(1, 3) },
   });
 
   t.assert(items);
   t.is(items.length, 2);
 
-  t.true(items.some(({ id }) => item1.id === id));
-  t.true(items.some(({ id }) => item2.id === id));
+  t.deepEqual(items[0], { pk: '1', sk: 1, p: 1 });
+  t.deepEqual(items[1], { pk: '1', sk: 3, p: 3 });
+
+  await destroy();
+});
+
+test('Query finds Items by sort key', async t => {
+  const { tablename, destroy } = await createTable({
+    KeySchema: [
+      { AttributeName: 'pk', KeyType: 'HASH' },
+      { AttributeName: 'sk', KeyType: 'RANGE' },
+    ],
+    AttributeDefinitions: [
+      { AttributeName: 'pk', AttributeType: 'S' },
+      { AttributeName: 'sk', AttributeType: 'N' },
+    ],
+    BillingMode: 'PAY_PER_REQUEST',
+  });
+
+  const query = createQueryItems<{ pk: string; sk: string }, string, number>(
+    tablename,
+    'pk',
+    {
+      sortKeyName: 'sk',
+    }
+  );
+
+  const item1 = createAttributes({ id: 'myid', age: 1 });
+  const item2 = createAttributes({ id: 'myid', age: 2 });
+
+  await DDBClient.instance.send(
+    new BatchWriteItemCommand({
+      RequestItems: {
+        [tablename]: [
+          { PutRequest: { Item: marshall({ pk: '1', sk: 1 }) } },
+          { PutRequest: { Item: marshall({ pk: '1', sk: 2 }) } },
+          { PutRequest: { Item: marshall({ pk: '1', sk: 3 }) } },
+        ],
+      },
+    })
+  );
+
+  const items = await query('1', { sortKey: 1 });
+
+  t.assert(items);
+  t.is(items.length, 1);
+
+  t.deepEqual(items[0], { pk: '1', sk: 1 });
+
+  await destroy();
 });

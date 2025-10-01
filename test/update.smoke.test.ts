@@ -8,26 +8,26 @@ import {
 } from '@aws-sdk/util-dynamodb';
 
 import { createUpdateItem, DDBClient } from '../src';
-import { Attributes, connectToDynamoDB, createAttributes } from './helper/db';
-import { randomTableName } from './helper/random';
+import { type Attributes, createAttributes, createTable } from './helper/db';
 
-const tablename = randomTableName();
+test('Update changes Item', async t => {
+  const { tablename, destroy } = await createTable({
+    KeySchema: [{ AttributeName: 'pk', KeyType: 'HASH' }],
+    AttributeDefinitions: [{ AttributeName: 'pk', AttributeType: 'S' }],
+    BillingMode: 'PAY_PER_REQUEST',
+  });
 
-test.serial.before(async () => {
-  await connectToDynamoDB(tablename);
-});
-
-test.serial('Update changes Item', async t => {
-  const update = createUpdateItem<Attributes>(tablename, 'id');
-
-  const attributes: Attributes = createAttributes();
+  const update = createUpdateItem<{ pk: string; age: number }>(tablename, 'pk');
 
   await DDBClient.instance.send(
-    new PutItemCommand({ TableName: tablename, Item: marshall(attributes) })
+    new PutItemCommand({
+      TableName: tablename,
+      Item: marshall({ pk: '1', age: 1 }),
+    })
   );
 
   const newAttributes = await update(
-    { ...attributes, age: 2 },
+    { pk: '1', age: 2 },
     { updateKeys: ['age'] }
   );
 
@@ -36,7 +36,7 @@ test.serial('Update changes Item', async t => {
   const { Item } = await DDBClient.instance.send(
     new GetItemCommand({
       TableName: tablename,
-      Key: { id: convertToAttr(attributes.id) },
+      Key: { pk: convertToAttr('1') },
     })
   );
 
@@ -45,4 +45,6 @@ test.serial('Update changes Item', async t => {
   }
 
   t.is(convertToNative(Item.age), 2);
+
+  await destroy();
 });

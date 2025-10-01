@@ -1,43 +1,49 @@
-import { QueryCommand, QueryCommandInput } from '@aws-sdk/client-dynamodb';
+import { QueryCommand, type QueryCommandInput } from '@aws-sdk/client-dynamodb';
 import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
 
 import { DDBClient } from './client';
-import { createConditionExpression, FilterOptions } from './expression';
+import { createConditionExpression, type FilterOptions } from './expression';
 import { maybeMerge } from './object';
-import { DynamoDBTypes, GSI, PK } from './types';
+import type { DynamoDBTypes, PK, SK } from './types';
+
+type CreateQueryOptions<Attributes extends DynamoDBTypes> = {
+  indexName?: string;
+  sortKeyName?: keyof Attributes;
+};
 
 type QueryDynamoDBOptions = Omit<QueryCommandInput, 'TableName'>;
 
-export type QueryOptions<Attributes extends DynamoDBTypes, GSISK extends PK> = {
-  sortKey?: GSISK;
+export type QueryOptions<Attributes extends DynamoDBTypes, TSK extends SK> = {
+  sortKey?: TSK;
   filterOptions?: FilterOptions<Attributes>;
   dynamodbOptions?: QueryDynamoDBOptions;
 };
 
 export type QueryItemsFunction<
   Attributes extends DynamoDBTypes,
-  GSIPK extends PK,
-  GSISK extends PK = string
+  TPK extends PK,
+  TSK extends SK = undefined
 > = (
-  key: GSIPK,
-  options?: QueryOptions<Attributes, GSISK>
+  key: TPK,
+  options?: QueryOptions<Attributes, TSK>
 ) => Promise<Attributes[]>;
 
 /**
  * Creates A function to query the Table
  * @param tablename Name of DynamoDB Table
- * @param gsiOptions Definition of GSI
+ * @param options Key and GSI options
  * @returns Function to query table
  */
 export const createQueryItems = <
   Attributes extends DynamoDBTypes,
-  GSIPK extends PK,
-  GSISK extends PK = string
+  TPK extends PK,
+  TSK extends SK = undefined
 >(
   tablename: string,
-  gsiOptions: GSI<Attributes>
-): QueryItemsFunction<Attributes, GSIPK, GSISK> => {
-  const { name, partitionKeyName, sortKeyName } = gsiOptions;
+  partitionKeyName: keyof Attributes,
+  options: CreateQueryOptions<Attributes>
+): QueryItemsFunction<Attributes, TPK, TSK> => {
+  const { indexName, sortKeyName } = options;
 
   return (key, options = {}) => {
     const keyOptions = {
@@ -47,8 +53,8 @@ export const createQueryItems = <
     } as Partial<Attributes>;
 
     const queryOptions = createQueryOptions(
-      name,
       keyOptions,
+      indexName,
       options.filterOptions
     );
 
@@ -67,8 +73,8 @@ export const createQueryItems = <
  * @returns Query Options
  */
 export const createQueryOptions = <Attributes extends DynamoDBTypes>(
-  index: string,
   keyOptions: Partial<Attributes>,
+  index?: string,
   filterOptions?: FilterOptions<Attributes>
 ): Partial<QueryDynamoDBOptions> => {
   // DDB key/index condition structs

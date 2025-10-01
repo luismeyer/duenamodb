@@ -1,11 +1,6 @@
-import { NativeAttributeValue } from '@aws-sdk/util-dynamodb';
-
-export type GSI<Attributes extends DynamoDBTypes> = {
-  name: string;
-  partitionKeyName: keyof Attributes;
-  sortKeyName?: keyof Attributes;
-};
+import type { NativeAttributeValue } from '@aws-sdk/util-dynamodb';
 
 export type PK = string | number;
+export type SK = string | number | undefined;
 
-export type DynamoDBTypes = { [key: string]: NativeAttributeValue };
+export type DynamoDBTypes = Record<string, NativeAttributeValue>;

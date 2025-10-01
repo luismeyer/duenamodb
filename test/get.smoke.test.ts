@@ -1,28 +1,61 @@
-import test from 'ava';
-
 import { PutItemCommand } from '@aws-sdk/client-dynamodb';
 import { marshall } from '@aws-sdk/util-dynamodb';
+import test from 'ava';
 
 import { createGetItem, DDBClient } from '../src';
-import { Attributes, connectToDynamoDB, createAttributes } from './helper/db';
-import { randomTableName } from './helper/random';
+import { createTable } from './helper/db';
 
-const tablename = randomTableName();
-const get = createGetItem<Attributes, string>(tablename, 'id');
+test('Get fetches Item', async t => {
+  const { tablename, destroy } = await createTable({
+    KeySchema: [{ AttributeName: 'pk', KeyType: 'HASH' }],
+    AttributeDefinitions: [{ AttributeName: 'pk', AttributeType: 'S' }],
+    BillingMode: 'PAY_PER_REQUEST',
+  });
 
-test.serial.before(async () => {
-  await connectToDynamoDB(tablename);
-});
-
-test.serial('Get fetches Item', async t => {
-  const attributes = createAttributes();
+  const get = createGetItem<{ pk: string }, string>(tablename, 'pk');
 
   await DDBClient.instance.send(
-    new PutItemCommand({ TableName: tablename, Item: marshall(attributes) })
+    new PutItemCommand({ TableName: tablename, Item: marshall({ pk: '1' }) })
   );
 
-  const item = await get(attributes.id);
+  const item = await get('1', {});
 
   t.assert(item);
-  t.deepEqual(item, attributes);
+  t.deepEqual(item, { pk: '1' });
+
+  await destroy();
+});
+
+test('Get fetches Item with SK', async t => {
+  const { tablename, destroy } = await createTable({
+    KeySchema: [
+      { AttributeName: 'pk', KeyType: 'HASH' },
+      { AttributeName: 'sk', KeyType: 'RANGE' },
+    ],
+    AttributeDefinitions: [
+      { AttributeName: 'pk', AttributeType: 'S' },
+      { AttributeName: 'sk', AttributeType: 'S' },
+    ],
+    BillingMode: 'PAY_PER_REQUEST',
+  });
+
+  const get = createGetItem<{ pk: string; sk: string }, string, string>(
+    tablename,
+    'pk',
+    'sk'
+  );
+
+  await DDBClient.instance.send(
+    new PutItemCommand({
+      TableName: tablename,
+      Item: marshall({ pk: '1', sk: '1' }),
+    })
+  );
+
+  const item = await get('1', { sortKey: '1' });
+
+  t.assert(item);
+  t.deepEqual(item, { pk: '1', sk: '1' });
+
+  await destroy();
 });

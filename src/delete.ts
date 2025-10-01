@@ -1,17 +1,21 @@
 import {
   DeleteItemCommand,
-  DeleteItemCommandInput,
+  type DeleteItemCommandInput,
 } from '@aws-sdk/client-dynamodb';
 import { convertToAttr } from '@aws-sdk/util-dynamodb';
 
 import { DDBClient } from './client';
-import { DynamoDBTypes, PK } from './types';
+import { maybeConvertToAttr, maybeMerge } from './object';
+import type { DynamoDBTypes, PK, SK } from './types';
 
 type DeleteItemOptions = Omit<DeleteItemCommandInput, 'TableName' | 'Key'>;
 
-export type DeleteItemFunction<PartitionKey extends PK> = (
-  key: PartitionKey,
-  options?: DeleteItemOptions
+export type DeleteItemFunction<TPK extends PK, TSK extends SK> = (
+  key: TPK,
+  options?: {
+    dynamodbOptions?: DeleteItemOptions;
+    sortKey?: TSK;
+  }
 ) => Promise<boolean>;
 
 /**
@@ -22,13 +26,22 @@ export type DeleteItemFunction<PartitionKey extends PK> = (
  */
 export const createDeleteItem = <
   Attributes extends DynamoDBTypes,
-  PartitionKey extends PK
+  TPK extends PK,
+  TSK extends SK = undefined
 >(
   tablename: string,
-  partitionKeyName: keyof Attributes
-): DeleteItemFunction<PartitionKey> => {
+  partitionKeyName: keyof Attributes,
+  sortKeyName?: keyof Attributes
+): DeleteItemFunction<TPK, TSK> => {
   return (key, options = {}) =>
-    deleteItem(tablename, { [partitionKeyName]: convertToAttr(key) }, options);
+    deleteItem(
+      tablename,
+      {
+        [partitionKeyName]: convertToAttr(key),
+        ...maybeMerge(sortKeyName, maybeConvertToAttr(options.sortKey)),
+      },
+      options.dynamodbOptions ?? {}
+    );
 };
 
 /**

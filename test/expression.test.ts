@@ -2,12 +2,11 @@ import test from 'ava';
 
 import {
   expressionAttributeNameKey,
-  expressionAttributeNames,
   expressionAttributeValueKey,
-  expressionAttributeValues,
-  conditionExpression,
   NOT,
   IN,
+  AND,
+  createConditionExpression,
 } from '../src';
 
 test('Expression-Attribute-Name-Key includes key value', t => {
@@ -29,113 +28,199 @@ test('Expression-Attribute-Value-Key and Expression-Attribute-Name-Key differ', 
   t.not(valueKey, nameKey);
 });
 
-test('Expression-Attribute-Names creates correct mapping', t => {
-  const names = expressionAttributeNames(['foo']);
+test('creates correct amount of entries', t => {
+  const { attributeValues, attributeNames, expression } =
+    createConditionExpression({
+      foo: 'bar',
+      bar: 'foo',
+      hello: 'world',
+    });
 
-  t.deepEqual(names, { '#foo': 'foo' });
+  t.deepEqual(attributeValues, {
+    ':foo': 'bar',
+    ':bar': 'foo',
+    ':hello': 'world',
+  });
+  t.deepEqual(attributeNames, {
+    '#foo': 'foo',
+    '#bar': 'bar',
+    '#hello': 'hello',
+  });
+  t.is(expression, '(#foo = :foo) and (#bar = :bar) and (#hello = :hello)');
 });
 
-test('Expression-Attribute-Names creates correct amount of entries', t => {
-  const names = expressionAttributeNames(['foo', 'bar', 'hello', 'world']);
+test('includes Name-Key and Value-Key', t => {
+  const { attributeNames, attributeValues, expression } =
+    createConditionExpression({ foo: 'bar' });
 
-  t.deepEqual(names, {
+  t.is(expression, '(#foo = :foo)');
+  t.deepEqual(attributeNames, {
+    '#foo': 'foo',
+  });
+  t.deepEqual(attributeValues, {
+    ':foo': 'bar',
+  });
+});
+
+test('handles multiple Keys', t => {
+  const { attributeNames, attributeValues, expression } =
+    createConditionExpression({
+      foo: 'bar',
+      bar: 'foo',
+      hello: 'world',
+      world: 'hello',
+    });
+
+  t.is(
+    expression,
+    '(#foo = :foo) and (#bar = :bar) and (#hello = :hello) and (#world = :world)'
+  );
+  t.deepEqual(attributeNames, {
     '#foo': 'foo',
     '#bar': 'bar',
     '#hello': 'hello',
     '#world': 'world',
   });
-});
-
-test('Expression-Attribute-Values creates correct mapping', t => {
-  const values = expressionAttributeValues({ foo: 'bar' });
-
-  t.deepEqual(values, { ':foo': 'bar' });
-});
-
-test('Expression-Attribute-Value creates correct amount of entries', t => {
-  const values = expressionAttributeValues({
-    foo: 'bar',
-    bar: 'foo',
-    hello: 'world',
-  });
-
-  t.deepEqual(values, {
+  t.deepEqual(attributeValues, {
     ':foo': 'bar',
     ':bar': 'foo',
     ':hello': 'world',
+    ':world': 'hello',
   });
 });
 
-test('Expression-Attribute-Value handles duenamo expression NOT', t => {
-  const values = expressionAttributeValues({
-    foo: NOT('bar'),
+test('handles duenamo expression NOT', t => {
+  const { attributeNames, attributeValues, expression } =
+    createConditionExpression({
+      foo: NOT('bar'),
+    });
+
+  t.is(expression, '(#foo <> :not_foo)');
+  t.deepEqual(attributeNames, {
+    '#foo': 'foo',
   });
-
-  t.deepEqual(values, { ':foo': 'bar' });
-});
-
-test('Expression-Attribute-Value handles duenamo expression IN', t => {
-  const values = expressionAttributeValues({
-    foo: IN('bar', 'baz'),
-  });
-
-  t.deepEqual(values, {
-    ':foo_0': 'bar',
-    ':foo_1': 'baz',
+  t.deepEqual(attributeValues, {
+    ':not_foo': 'bar',
   });
 });
 
-test('Condition-Expression includes Name-Key and Value-Key', t => {
-  const exp = conditionExpression({ foo: 'bar' });
+test('handles duenamo expression IN', t => {
+  const { attributeNames, attributeValues, expression } =
+    createConditionExpression({
+      foo: IN('bar', 'baz', 'hello', 'world'),
+    });
 
-  t.is(exp, '#foo = :foo');
+  t.is(expression, '(#foo IN (:foo_in0, :foo_in1, :foo_in2, :foo_in3))');
+  t.deepEqual(attributeNames, {
+    '#foo': 'foo',
+  });
+  t.deepEqual(attributeValues, {
+    ':foo_in0': 'bar',
+    ':foo_in1': 'baz',
+    ':foo_in2': 'hello',
+    ':foo_in3': 'world',
+  });
 });
 
-test('Condition-Expression handles multiple Keys', t => {
-  const exp = conditionExpression({
-    foo: 'bar',
-    bar: 'foo',
-    hello: 'world',
-    world: 'hello',
-  });
+test('handles equal expression and duenamo expression', t => {
+  const { attributeNames, attributeValues, expression } =
+    createConditionExpression({
+      id: NOT('1'),
+      name: 'username',
+      foo: IN('bar', 'baz'),
+      bar: AND(NOT('foo'), NOT('hello')),
+    });
 
   t.is(
-    exp,
-    '#foo = :foo and #bar = :bar and #hello = :hello and #world = :world'
+    expression,
+    '(#id <> :not_id) and (#name = :name) and (#foo IN (:foo_in0, :foo_in1)) and ((#bar <> :not_bar_and0) AND (#bar <> :not_bar_and1))'
   );
+  t.deepEqual(attributeNames, {
+    '#id': 'id',
+    '#name': 'name',
+    '#foo': 'foo',
+    '#bar': 'bar',
+  });
+  t.deepEqual(attributeValues, {
+    ':not_id': '1',
+    ':name': 'username',
+    ':foo_in0': 'bar',
+    ':foo_in1': 'baz',
+    ':not_bar_and0': 'foo',
+    ':not_bar_and1': 'hello',
+  });
 });
 
-test('Condition-Expression handles duenamo expression NOT', t => {
-  const exp = conditionExpression({
-    foo: NOT('bar'),
-  });
+test('handles booleans', t => {
+  const { attributeNames, attributeValues, expression } =
+    createConditionExpression({
+      disabled: false,
+      name: 'username',
+    });
 
-  t.is(exp, '#foo <> :foo');
+  t.is(expression, '(#disabled = :disabled) and (#name = :name)');
+  t.deepEqual(attributeNames, {
+    '#disabled': 'disabled',
+    '#name': 'name',
+  });
+  t.deepEqual(attributeValues, {
+    ':disabled': false,
+    ':name': 'username',
+  });
 });
 
-test('Condition-Expression handles duenamo expression IN', t => {
-  const exp = conditionExpression({
-    foo: IN('bar', 'baz', 'hello', 'world'),
-  });
+test('handles duenamo expression AND with IN and NOT', t => {
+  const { attributeNames, attributeValues, expression } =
+    createConditionExpression({
+      foo: AND(IN('foo', 'bar'), NOT('hello')),
+    });
 
-  t.is(exp, '#foo IN (:foo_0, :foo_1, :foo_2, :foo_3)');
+  t.is(
+    expression,
+    '((#foo IN (:foo_and0_in0, :foo_and0_in1)) AND (#foo <> :not_foo_and1))'
+  );
+  t.deepEqual(attributeNames, {
+    '#foo': 'foo',
+  });
+  t.deepEqual(attributeValues, {
+    ':foo_and0_in0': 'foo',
+    ':foo_and0_in1': 'bar',
+    ':not_foo_and1': 'hello',
+  });
 });
 
-test('Condition-Expression handles equal expression and duenamo expression', t => {
-  const exp = conditionExpression({
-    id: NOT('1'),
-    name: 'username',
-    foo: IN('bar', 'baz'),
-  });
+test('handles duenamo expression AND with NOT', t => {
+  const { attributeNames, attributeValues, expression } =
+    createConditionExpression({
+      foo: AND(NOT('foo'), NOT('hello')),
+    });
 
-  t.is(exp, '#id <> :id and #name = :name and #foo IN (:foo_0, :foo_1)');
+  t.is(expression, '((#foo <> :not_foo_and0) AND (#foo <> :not_foo_and1))');
+  t.deepEqual(attributeNames, {
+    '#foo': 'foo',
+  });
+  t.deepEqual(attributeValues, {
+    ':not_foo_and0': 'foo',
+    ':not_foo_and1': 'hello',
+  });
 });
 
-test('Condition-Expression handles booleans', t => {
-  const exp = conditionExpression({
-    disabled: false,
-    name: 'username',
-  });
+test('handles nested duenamo expression AND', t => {
+  const { attributeNames, attributeValues, expression } =
+    createConditionExpression({
+      foo: AND(NOT('foo'), AND(NOT('hello'), NOT('world'))),
+    });
 
-  t.is(exp, '#disabled = :disabled and #name = :name');
+  t.is(
+    expression,
+    '((#foo <> :not_foo_and0) AND ((#foo <> :not_foo_and1_and0) AND (#foo <> :not_foo_and1_and1)))'
+  );
+  t.deepEqual(attributeNames, {
+    '#foo': 'foo',
+  });
+  t.deepEqual(attributeValues, {
+    ':not_foo_and0': 'foo',
+    ':not_foo_and1_and0': 'hello',
+    ':not_foo_and1_and1': 'world',
+  });
 });

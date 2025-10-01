@@ -1,8 +1,12 @@
 import {
   UpdateItemCommand,
-  UpdateItemCommandInput,
+  type UpdateItemCommandInput,
 } from '@aws-sdk/client-dynamodb';
-import { convertToAttr, marshall } from '@aws-sdk/util-dynamodb';
+import {
+  convertToAttr,
+  marshall,
+  type NativeAttributeValue,
+} from '@aws-sdk/util-dynamodb';
 
 import { DDBClient } from './client';
 import {
@@ -11,8 +15,8 @@ import {
   expressionAttributeValueKey,
   expressionAttributeValues,
 } from './expression';
-import { Keys } from './object';
-import { DynamoDBTypes } from './types';
+import { type Keys, maybeMerge, maybeConvertToAttr } from './object';
+import type { DynamoDBTypes } from './types';
 
 type DynamoDBOptions = Omit<UpdateItemCommandInput, 'TableName'>;
 
@@ -34,10 +38,16 @@ export type UpdateItemFunction<Attributes extends DynamoDBTypes> = (
  */
 export const createUpdateItem = <Attributes extends DynamoDBTypes>(
   tablename: string,
-  partitionKeyName: keyof Attributes
+  partitionKeyName: keyof Attributes,
+  sortKeyName?: keyof Attributes
 ): UpdateItemFunction<Attributes> => {
   return async (item, options) => {
-    const updateOptions = createUpdateOptions(partitionKeyName, item, options);
+    const updateOptions = createUpdateOptions(
+      partitionKeyName,
+      sortKeyName,
+      item,
+      options
+    );
     if (!updateOptions) {
       return item;
     }
@@ -53,7 +63,9 @@ export const createUpdateItem = <Attributes extends DynamoDBTypes>(
 
     // remove the values for the updated item
     const removeKeys = options.removeKeys ?? [];
-    removeKeys.forEach(key => delete item[key]);
+    for (const key of removeKeys) {
+      delete item[key];
+    }
 
     return item;
   };
@@ -100,11 +112,12 @@ export const createRemoveExpression = (keys: string[]): string | undefined => {
  * @param options The keys to update and remove
  * @returns Update options
  */
-export const createUpdateOptions = <Attributes extends DynamoDBTypes>(
+export function createUpdateOptions<Attributes extends DynamoDBTypes>(
   partitionKeyName: keyof Attributes,
+  sortKeyName: keyof Attributes | undefined,
   updatedObject: Attributes,
   options: UpdateItemOptions<Attributes>
-): DynamoDBOptions | undefined => {
+): DynamoDBOptions | undefined {
   if (!options.removeKeys && !options.updateKeys) {
     return;
   }
@@ -124,8 +137,11 @@ export const createUpdateOptions = <Attributes extends DynamoDBTypes>(
       ? {
           ExpressionAttributeValues: marshall(
             expressionAttributeValues(
-              updateKeys.reduce(
-                (acc, key) => ({ ...acc, [key]: updatedObject[key] }),
+              updateKeys.reduce<Record<string, NativeAttributeValue>>(
+                (acc, key) => {
+                  acc[key] = updatedObject[key];
+                  return acc;
+                },
                 {}
               )
             )
@@ -140,14 +156,18 @@ export const createUpdateOptions = <Attributes extends DynamoDBTypes>(
   const RemoveUpdateExpression = createRemoveExpression(removeKeys) ?? '';
 
   const key = updatedObject[partitionKeyName];
+  const sortKey = sortKeyName ? updatedObject[sortKeyName] : undefined;
 
   return {
-    Key: { [partitionKeyName]: convertToAttr(key) },
+    Key: {
+      [partitionKeyName]: convertToAttr(key),
+      ...maybeMerge(sortKeyName, maybeConvertToAttr(sortKey)),
+    },
     ExpressionAttributeNames,
     UpdateExpression: `${UpdateUpdateExpression} ${RemoveUpdateExpression}`,
     ...ExpressionAttributeValues,
   };
-};
+}
 
 /**
  * Updates a item in the DDB.
