@@ -35,11 +35,11 @@ type CreateDeleteItemOptions<Attributes extends DynamoDBTypes> = {
  */
 export const createDeleteItem = <
 	Attributes extends DynamoDBTypes,
-	TPK extends PK,
-	TSK extends SK = undefined,
+	TPKN extends keyof Attributes = keyof Attributes,
+	TSKN extends keyof Attributes = keyof Attributes,
 >(
 	options: CreateDeleteItemOptions<Attributes>,
-): DeleteItemFunction<TPK, TSK> => {
+): DeleteItemFunction<Attributes[TPKN], Attributes[TSKN]> => {
 	const { tablename, pkName, skName } = options;
 
 	return ({ pk, sk, dynamodbOptions = {} }) =>

@@ -49,11 +49,11 @@ export type QueryItemsFunction<
  */
 export const createQueryItems = <
 	Attributes extends DynamoDBTypes,
-	TPK extends PK,
-	TSK extends SK = undefined,
+	TPKN extends keyof Attributes = keyof Attributes,
+	TSKN extends keyof Attributes = keyof Attributes,
 >(
 	options: CreateQueryItemsOptions<Attributes>,
-): QueryItemsFunction<Attributes, TPK, TSK> => {
+): QueryItemsFunction<Attributes, Attributes[TPKN], Attributes[TSKN]> => {
 	const { indexName, skName, pkName, tablename } = options;
 
 	return ({ pk, sk, dynamodbOptions = {}, filter }) => {

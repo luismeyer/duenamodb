@@ -41,11 +41,11 @@ type CreateGetItemOptions<Attributes extends DynamoDBTypes> = {
  */
 export const createGetItem = <
 	Attributes extends DynamoDBTypes,
-	TPK extends PK,
-	TSK extends SK = undefined,
+	TPKN extends keyof Attributes = keyof Attributes,
+	TSKN extends keyof Attributes = keyof Attributes,
 >(
 	options: CreateGetItemOptions<Attributes>,
-): GetItemFunction<Attributes, TPK, TSK> => {
+): GetItemFunction<Attributes, Attributes[TPKN], Attributes[TSKN]> => {
 	const { tablename, pkName, skName } = options;
 
 	return async ({ pk, sk, dynamodbOptions = {} }) => {

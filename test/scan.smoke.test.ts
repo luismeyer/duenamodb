@@ -2,7 +2,7 @@ import test from "ava";
 import { BatchWriteItemCommand } from "@aws-sdk/client-dynamodb";
 import { marshall } from "@aws-sdk/util-dynamodb";
 import { createScanItems, DDBClient, IS_LESS_OR_EQUAL_THAN, NOT } from "../src";
-import { type Attributes, createTable } from "./helper/db";
+import { createTable } from "./helper/db";
 
 test("Scan fetches Items", async (t) => {
 	const { tablename, destroy } = await createTable({
@@ -11,7 +11,7 @@ test("Scan fetches Items", async (t) => {
 		BillingMode: "PAY_PER_REQUEST",
 	});
 
-	const scan = createScanItems<Attributes>({ tablename });
+	const scan = createScanItems<{ pk: string }>({ tablename });
 
 	await DDBClient.instance.send(
 		new BatchWriteItemCommand({

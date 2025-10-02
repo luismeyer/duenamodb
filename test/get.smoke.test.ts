@@ -11,7 +11,7 @@ test("Get fetches Item", async (t) => {
 		BillingMode: "PAY_PER_REQUEST",
 	});
 
-	const get = createGetItem<{ pk: string }, string>({
+	const get = createGetItem<{ pk: string }>({
 		tablename,
 		pkName: "pk",
 	});
@@ -41,7 +41,7 @@ test("Get fetches Item with SK", async (t) => {
 		BillingMode: "PAY_PER_REQUEST",
 	});
 
-	const get = createGetItem<{ pk: string; sk: string }, string, string>({
+	const get = createGetItem<{ pk: string; sk: string }>({
 		tablename,
 		pkName: "pk",
 		skName: "sk",

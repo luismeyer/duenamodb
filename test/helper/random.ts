@@ -1,7 +1,4 @@
-export const randomNumber = (len = 10000) =>
-	Math.floor(Math.random() * len) + 1;
-
-export const randomTableName = () => `table-${randomNumber()}`;
+export const randomTableName = () => `table-${randomString()}`;
 
 export const randomString = (len = 10) =>
 	Math.random()

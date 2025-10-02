@@ -5,30 +5,9 @@ import {
 } from "@aws-sdk/client-dynamodb";
 
 import { DDBClient } from "../../src";
-import { randomNumber, randomTableName } from "./random";
-
-export type Attributes = {
-	id: string;
-	age: number;
-	name: string;
-};
+import { randomTableName } from "./random";
 
 export const DB_PORT = 8000;
-
-export const createAttributes = (options?: {
-	id?: string;
-	age?: number;
-	name?: string;
-}): Attributes => {
-	const id = options?.id ?? randomNumber();
-	const age = options?.age ?? randomNumber(100);
-
-	return {
-		id: String(id),
-		age,
-		name: options?.name ?? `Name-${id}`,
-	};
-};
 
 export const createTable = async (
 	input: Omit<CreateTableCommandInput, "TableName">,

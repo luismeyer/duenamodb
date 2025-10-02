@@ -11,7 +11,7 @@ test("Delete removes Item", async (t) => {
 		BillingMode: "PAY_PER_REQUEST",
 	});
 
-	const deleteItem = createDeleteItem<{ pk: string }, string>({
+	const deleteItem = createDeleteItem<{ pk: string }>({
 		tablename,
 		pkName: "pk",
 	});
@@ -49,11 +49,11 @@ test("Delete item with SK", async (t) => {
 		BillingMode: "PAY_PER_REQUEST",
 	});
 
-	const deleteItem = createDeleteItem<
-		{ pk: string; sk: string },
-		string,
-		string
-	>({ tablename, pkName: "pk", skName: "sk" });
+	const deleteItem = createDeleteItem<{ pk: string; sk: string }>({
+		tablename,
+		pkName: "pk",
+		skName: "sk",
+	});
 
 	await DDBClient.instance.send(
 		new PutItemCommand({

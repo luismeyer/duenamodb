@@ -32,7 +32,7 @@ test("Query fetches Items", async (t) => {
 		],
 	});
 
-	const query = createQueryItems<{ pk: string; ik: string }, number>({
+	const query = createQueryItems<{ pk: string; ik: number }>({
 		tablename,
 		pkName: "ik",
 		indexName,
@@ -80,9 +80,11 @@ test("Query filters Items", async (t) => {
 		],
 	});
 
-	const query = createQueryItems<{ pk: string; ik: string; p: string }, number>(
-		{ tablename, pkName: "ik", indexName },
-	);
+	const query = createQueryItems<{ pk: string; ik: number; p: string }>({
+		tablename,
+		pkName: "ik",
+		indexName,
+	});
 
 	await DDBClient.instance.send(
 		new BatchWriteItemCommand({
@@ -125,11 +127,11 @@ test("Query filters Items by NOT expression", async (t) => {
 		BillingMode: "PAY_PER_REQUEST",
 	});
 
-	const query = createQueryItems<
-		{ pk: string; sk: string; p: number },
-		string,
-		number
-	>({ tablename, pkName: "pk", skName: "sk" });
+	const query = createQueryItems<{ pk: string; sk: number; p: number }>({
+		tablename,
+		pkName: "pk",
+		skName: "sk",
+	});
 
 	await DDBClient.instance.send(
 		new BatchWriteItemCommand({
@@ -166,11 +168,11 @@ test("Query filters Items by IN expression", async (t) => {
 		BillingMode: "PAY_PER_REQUEST",
 	});
 
-	const query = createQueryItems<
-		{ pk: string; sk: number; p: number },
-		string,
-		number
-	>({ tablename, pkName: "pk", skName: "sk" });
+	const query = createQueryItems<{ pk: string; sk: number; p: number }>({
+		tablename,
+		pkName: "pk",
+		skName: "sk",
+	});
 
 	await DDBClient.instance.send(
 		new BatchWriteItemCommand({
@@ -208,7 +210,7 @@ test("Query finds Items by sort key", async (t) => {
 		BillingMode: "PAY_PER_REQUEST",
 	});
 
-	const query = createQueryItems<{ pk: string; sk: string }, string, number>({
+	const query = createQueryItems<{ pk: string; sk: number }>({
 		tablename,
 		pkName: "pk",
 		skName: "sk",
@@ -249,7 +251,7 @@ test("Query finds Items by sort key condition number", async (t) => {
 		BillingMode: "PAY_PER_REQUEST",
 	});
 
-	const query = createQueryItems<{ pk: string; sk: string }, string, number>({
+	const query = createQueryItems<{ pk: string; sk: number }>({
 		tablename,
 		pkName: "pk",
 		skName: "sk",
@@ -291,7 +293,7 @@ test("Query finds Items by sort key condition string", async (t) => {
 		BillingMode: "PAY_PER_REQUEST",
 	});
 
-	const query = createQueryItems<{ pk: string; sk: string }, string, string>({
+	const query = createQueryItems<{ pk: string; sk: string }>({
 		tablename,
 		pkName: "pk",
 		skName: "sk",
