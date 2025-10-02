@@ -16,9 +16,9 @@ jobs:
       - name: 🛠 Setup node
         uses: actions/setup-node@v3
         with:
-          node-version: '16.x'
+          node-version: "16.x"
           always-auth: true
-          registry-url: 'https://registry.npmjs.org'
+          registry-url: "https://registry.npmjs.org"
 
       - uses: pnpm/action-setup@v2
         name: 📥 Download deps
@@ -26,11 +26,21 @@ jobs:
           version: 8
           run_install: true
 
+      - name: 🐳 Setup Docker
+        uses: docker/setup-compose-action@v1
+
+      - name: 🚢 Start containers
+        run: docker compose up -d --build
+
       - name: 🧪 Test
         run: pnpm test
         env:
-          AWS_ACCESS_KEY_ID: 'test'
-          AWS_SECRET_ACCESS_KEY: 'test'
+          AWS_ACCESS_KEY_ID: "test"
+          AWS_SECRET_ACCESS_KEY: "test"
+
+      - name: 🛑 Stop containers
+        if: always()
+        run: docker compose down
 
       - name: 🏗 Build
         run: pnpm build
