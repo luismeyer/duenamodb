@@ -25,7 +25,12 @@ type CreateQueryItemsOptions<Attributes extends DynamoDBTypes> = {
 
 type QueryDynamoDBOptions = Omit<QueryCommandInput, "TableName">;
 
-export type QueryOptions<Attributes extends DynamoDBTypes, TSK extends SK> = {
+export type QueryOptions<
+	Attributes extends DynamoDBTypes,
+	TPK extends PK,
+	TSK extends SK,
+> = {
+	pk: TPK;
 	sk?: SortKeyCondition<TSK>;
 	filter?: FilterCondition<Attributes>;
 	dynamodbOptions?: QueryDynamoDBOptions;
@@ -35,10 +40,7 @@ export type QueryItemsFunction<
 	Attributes extends DynamoDBTypes,
 	TPK extends PK,
 	TSK extends SK = undefined,
-> = (
-	key: TPK,
-	options?: QueryOptions<Attributes, TSK>,
-) => Promise<Attributes[]>;
+> = (options: QueryOptions<Attributes, TPK, TSK>) => Promise<Attributes[]>;
 
 /**
  * Creates A function to query the Table
@@ -54,9 +56,9 @@ export const createQueryItems = <
 ): QueryItemsFunction<Attributes, TPK, TSK> => {
 	const { indexName, skName, pkName, tablename } = options;
 
-	return (key, { sk, dynamodbOptions = {}, filter } = {}) => {
+	return ({ pk, sk, dynamodbOptions = {}, filter }) => {
 		const keyOptions = {
-			[pkName]: key,
+			[pkName]: pk,
 
 			...maybeMerge(skName, sk),
 		} as Partial<Attributes>;

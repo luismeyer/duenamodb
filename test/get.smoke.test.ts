@@ -20,7 +20,7 @@ test("Get fetches Item", async (t) => {
 		new PutItemCommand({ TableName: tablename, Item: marshall({ pk: "1" }) }),
 	);
 
-	const item = await get("1", {});
+	const item = await get({ pk: "1" });
 
 	t.assert(item);
 	t.deepEqual(item, { pk: "1" });
@@ -54,7 +54,7 @@ test("Get fetches Item with SK", async (t) => {
 		}),
 	);
 
-	const item = await get("1", { sk: "1" });
+	const item = await get({ pk: "1", sk: "1" });
 
 	t.assert(item);
 	t.deepEqual(item, { pk: "1", sk: "1" });

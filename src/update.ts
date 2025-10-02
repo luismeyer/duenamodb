@@ -122,8 +122,8 @@ export const createRemoveExpression = (keys: string[]): string | undefined => {
  * @returns Update options
  */
 export function createUpdateOptions<Attributes extends DynamoDBTypes>(
-	partitionKeyName: keyof Attributes,
-	sortKeyName: keyof Attributes | undefined,
+	pkName: keyof Attributes,
+	skName: keyof Attributes | undefined,
 	updatedObject: Attributes,
 	options: UpdateItemOptions<Attributes>,
 ): DynamoDBOptions | undefined {
@@ -164,13 +164,13 @@ export function createUpdateOptions<Attributes extends DynamoDBTypes>(
 	// the remove update expression creates Remove #attributeNames, ...
 	const RemoveUpdateExpression = createRemoveExpression(removeKeys) ?? "";
 
-	const key = updatedObject[partitionKeyName];
-	const sortKey = sortKeyName ? updatedObject[sortKeyName] : undefined;
+	const key = updatedObject[pkName];
+	const sortKey = skName ? updatedObject[skName] : undefined;
 
 	return {
 		Key: {
-			[partitionKeyName]: convertToAttr(key),
-			...maybeMerge(sortKeyName, maybeConvertToAttr(sortKey)),
+			[pkName]: convertToAttr(key),
+			...maybeMerge(skName, maybeConvertToAttr(sortKey)),
 		},
 		ExpressionAttributeNames,
 		UpdateExpression: `${UpdateUpdateExpression} ${RemoveUpdateExpression}`,

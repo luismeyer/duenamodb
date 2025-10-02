@@ -20,7 +20,7 @@ test("Delete removes Item", async (t) => {
 		new PutItemCommand({ TableName: tablename, Item: marshall({ pk: "1" }) }),
 	);
 
-	const success = await deleteItem("1");
+	const success = await deleteItem({ pk: "1" });
 
 	t.true(success);
 
@@ -62,7 +62,7 @@ test("Delete item with SK", async (t) => {
 		}),
 	);
 
-	const success = await deleteItem("1", { sk: "1" });
+	const success = await deleteItem({ pk: "1", sk: "1" });
 	t.true(success);
 
 	const { Item } = await DDBClient.instance.send(

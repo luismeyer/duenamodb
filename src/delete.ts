@@ -10,13 +10,11 @@ import type { DynamoDBTypes, PK, SK } from "./types";
 
 type DeleteItemOptions = Omit<DeleteItemCommandInput, "TableName" | "Key">;
 
-export type DeleteItemFunction<TPK extends PK, TSK extends SK> = (
-	key: TPK,
-	options?: {
-		dynamodbOptions?: DeleteItemOptions;
-		sk?: TSK;
-	},
-) => Promise<boolean>;
+export type DeleteItemFunction<TPK extends PK, TSK extends SK> = (options: {
+	pk: TPK;
+	sk?: TSK;
+	dynamodbOptions?: DeleteItemOptions;
+}) => Promise<boolean>;
 
 type CreateDeleteItemOptions<Attributes extends DynamoDBTypes> = {
 	tablename: string;
@@ -44,11 +42,11 @@ export const createDeleteItem = <
 ): DeleteItemFunction<TPK, TSK> => {
 	const { tablename, pkName, skName } = options;
 
-	return (key, { sk, dynamodbOptions = {} } = {}) =>
+	return ({ pk, sk, dynamodbOptions = {} }) =>
 		deleteItem(
 			tablename,
 			{
-				[pkName]: convertToAttr(key),
+				[pkName]: convertToAttr(pk),
 				...maybeMerge(skName, maybeConvertToAttr(sk)),
 			},
 			dynamodbOptions,

@@ -50,7 +50,7 @@ test("Query fetches Items", async (t) => {
 		}),
 	);
 
-	const items = await query(2);
+	const items = await query({ pk: 2 });
 
 	t.assert(items);
 	t.is(items.length, 2);
@@ -103,7 +103,7 @@ test("Query filters Items", async (t) => {
 		}),
 	);
 
-	const items = await query(1, { filter: { p: "filter" } });
+	const items = await query({ pk: 1, filter: { p: "filter" } });
 
 	t.assert(items);
 	t.is(items.length, 1);
@@ -143,9 +143,7 @@ test("Query filters Items by NOT expression", async (t) => {
 		}),
 	);
 
-	const items = await query("1", {
-		filter: { p: NOT(1) },
-	});
+	const items = await query({ pk: "1", filter: { p: NOT(1) } });
 
 	t.assert(items);
 	t.is(items.length, 1);
@@ -186,9 +184,7 @@ test("Query filters Items by IN expression", async (t) => {
 		}),
 	);
 
-	const items = await query("1", {
-		filter: { p: IN(1, 3) },
-	});
+	const items = await query({ pk: "1", filter: { p: IN(1, 3) } });
 
 	t.assert(items);
 	t.is(items.length, 2);
@@ -230,7 +226,7 @@ test("Query finds Items by sort key", async (t) => {
 		}),
 	);
 
-	const items = await query("1", { sk: 1 });
+	const items = await query({ pk: "1", sk: 1 });
 
 	t.assert(items);
 	t.is(items.length, 1);
@@ -271,7 +267,7 @@ test("Query finds Items by sort key condition number", async (t) => {
 		}),
 	);
 
-	const items = await query("1", { sk: IS_LESS_OR_EQUAL_THAN(2) });
+	const items = await query({ pk: "1", sk: IS_LESS_OR_EQUAL_THAN(2) });
 
 	t.assert(items);
 	t.is(items.length, 2);
@@ -313,7 +309,7 @@ test("Query finds Items by sort key condition string", async (t) => {
 		}),
 	);
 
-	const items = await query("1", { sk: BEGINS_WITH("23") });
+	const items = await query({ pk: "1", sk: BEGINS_WITH("23") });
 
 	t.assert(items);
 	t.is(items.length, 1);
