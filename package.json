@@ -8,6 +8,14 @@
 		"DynamoDB Client",
 		"Amazon DynamoDB"
 	],
+	"homepage": "https://github.com/luismeyer/duenamodb#readme",
+	"bugs": {
+		"url": "https://github.com/luismeyer/duenamodb/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/luismeyer/duenamodb"
+	},
 	"license": "MIT",
 	"main": "lib/index.js",
 	"types": "lib/index.d.ts",
@@ -42,6 +50,5 @@
 		"@vercel/functions": {
 			"optional": true
 		}
-	},
-	"url": "https://github.com/luismeyer/duenamodb"
+	}
 }
