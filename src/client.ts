@@ -26,8 +26,12 @@ export class DDBClient {
 			};
 		}
 
-		const isVercel = process.env.Vercel || process.env.VERCEL_OIDC_TOKEN;
-		if (isVercel && process.env.AWS_ROLE_ARN) {
+		const isVercel = process.env.VERCEL || process.env.VERCEL_OIDC_TOKEN;
+		if (
+			!DDBClient._params.credentials &&
+			isVercel &&
+			process.env.AWS_ROLE_ARN
+		) {
 			DDBClient._params.credentials = awsCredentialsProvider({
 				roleArn: process.env.AWS_ROLE_ARN,
 			});
