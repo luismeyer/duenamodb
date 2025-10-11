@@ -11,7 +11,7 @@ test("Client is always the same instance", (t) => {
 });
 
 test("Client uses vercel credentials", (t) => {
-	process.env.Vercel = "true";
+	process.env.VERCEL_OIDC_TOKEN = "true";
 	process.env.AWS_ROLE_ARN = "arn:aws:iam::123456789012:role/test";
 	const instance = DDBClient.instance;
 
