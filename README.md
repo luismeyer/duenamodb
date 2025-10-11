@@ -1,10 +1,8 @@
 # dÜnamodb 📀
 
-Simple DynamoDB client written in TypeScript.
+Simple, strongly-typed helpers around the AWS SDK DynamoDB client.
 
-## Setup 🛠
-
-Install the package
+## Install 🛠
 
 ```bash
 pnpm install duenamodb
@@ -14,117 +12,167 @@ pnpm install duenamodb
 npm install duenamodb
 ```
 
-If not running in AWS Lambda configure the Client using the static accessor on the DDBClient class.
+## Configure the shared DynamoDB client
+
+All high-level helpers use the singleton `DDBClient` under the hood. Configure it once before creating any functions (for local development you must also supply credentials):
 
 ```ts
+import { DDBClient } from "duenamodb";
+
 DDBClient.params = {
-  region: 'localhost',
-  endpoint: `http://localhost:8000`,
+	region: "localhost",
+	endpoint: "http://localhost:8000",
+	credentials: {
+		accessKeyId: "local",
+		secretAccessKey: "local",
+	},
 };
 ```
 
-Also you might need to provide mock AWS credentials inside the environment variables.
+From that point `DDBClient.instance` returns the lazily created `DynamoDBClient` from `@aws-sdk/client-dynamodb`.
 
-## API 📄
+## Create typed table helpers
 
-The API of dÜnamodb is straight forward. There is a create Function for every DynamoDB action.
+Every DynamoDB action has a corresponding `create*` builder that wires the table metadata once and returns a ready-to-use function. Builders accept a single options object so the README matches the current implementation.
 
-### Create the Functions 🏗
-
-To interact with your DynamoDB use the create-functions from the dÜnamodb lib
-
-Put item:
+### `createPutItem`
 
 ```ts
-const putItem = createPutItem<Attributes>(tableName);
+import { createPutItem } from "duenamodb";
+
+type User = { id: string; name: string };
+
+const putUser = createPutItem<User>({ tablename: "Users" });
+
+await putUser({ id: "1", name: "Ada" });
 ```
 
-Get item:
+Returned function signature: `(item, options?) => Promise<Attributes>`. Pass native `PutItemCommand` overrides through `options` if you need condition expressions, return values, etc.
+
+### `createGetItem`
 
 ```ts
-const getItem = createGetItem<Attributes, string>(tableName, partitionKeyName);
+import { createGetItem } from "duenamodb";
+
+const getUser = createGetItem<User, "id">({
+	tablename: "Users",
+	pkName: "id",
+});
+
+const user = await getUser({ pk: "1" });
 ```
 
-Update item:
+If your table uses a sort key, provide `sortKeyName` (inferred generic `TSK` tracks its type) and call with `{ pk, sk }`. Extra `GetItemCommand` options go in `dynamodbOptions`.
+
+### `createUpdateItem`
 
 ```ts
-const updateItem = createUpdateItem<Attributes>(tableName);
+import { createUpdateItem } from "duenamodb";
+
+const updateUser = createUpdateItem<User>({
+	tablename: "Users",
+	pkName: "id",
+});
+
+await updateUser(
+	{ id: "1", name: "Grace" },
+	{ updateKeys: ["name"] },
+);
 ```
 
-Scan items:
+`updateKeys` decides which attributes are written. Use `removeKeys` to build a `REMOVE` clause. The function returns the updated object or `undefined` if the update fails.
+
+### `createDeleteItem`
 
 ```ts
-const scanItems = createScanItems<Attributes>(tableName);
+import { createDeleteItem } from "duenamodb";
+
+const deleteUser = createDeleteItem<User, "id">({
+	tablename: "Users",
+	pkName: "id",
+});
+
+const deleted = await deleteUser({ pk: "1" });
 ```
 
-Query items:
+Returns `true` when DynamoDB reports success. Provide `sortKeyName` if the table requires it.
+
+### `createScanItems`
 
 ```ts
-const queryItems = createQueryItems<Attributes, number>(tableName, {
-  name,
-  partitionKeyName,
+import { createScanItems, NOT } from "duenamodb";
+
+const scanUsers = createScanItems<User>({ tablename: "Users" });
+
+const inactiveUsers = await scanUsers({
+	filter: { status: NOT("active") },
 });
 ```
 
-Delete item:
+Supports optional `filter` conditions and `ScanCommand` overrides through `dynamodbOptions`. Pagination is handled automatically until `LastEvaluatedKey` is empty.
+
+### `createQueryItems`
 
 ```ts
-const deleteItem = createDeleteItem<Attributes, string>(
-  tablename,
-  partitionKeyName
-);
+import { createQueryItems, IS_GREATER_THAN } from "duenamodb";
+
+const queryUserEvents = createQueryItems<UserEvent, "userId", "createdAt">({
+	tablename: "UserEvents",
+	pkName: "userId",
+	skName: "createdAt",
+});
+
+const events = await queryUserEvents({
+	pk: "user-1",
+	sk: IS_GREATER_THAN(0),
+});
 ```
 
-### Utilites
+Add `indexName` when querying a GSI. You can also supply a `filter` expression or pass raw `QueryCommand` options through `dynamodbOptions`. Pagination is automatic just like `scan`.
 
-There is also a utility function that creates the scan, put, update, get and delete function.
+## Table utility
+
+`createTableFunctions` bundles the builders above into a single object:
 
 ```ts
-const { getItem, scanItems, updateItem } = createTableFunctions<
-  Attributes,
-  string
->(tablename, partitionKeyName);
+import { createTableFunctions } from "duenamodb";
+
+const userTable = createTableFunctions<User, "id">({
+	tablename: "Users",
+	partitionKeyName: "id",
+});
+
+const { getItem, putItem, deleteItem, scanItems, updateItem, queryItems } =
+	userTable;
 ```
 
-### Use the Functions 👷‍♀️
+Pass `sortKeyName` to add sort-key support. Each helper behaves exactly like the individually created versions.
 
-Use the functions to read and write data from the DB
+## Expression utilities
 
-Put item:
+Need richer key or filter expressions? The `expression` module exposes builders that map 1:1 to DynamoDB syntax while preserving type safety:
 
 ```ts
-await saveItem({ id: "1", name: "foo", ... });
+import {
+	IN,
+	NOT,
+	AND,
+	IS_GREATER_THAN,
+	IS_LESS_THAN,
+	IS_BETWEEN,
+	BEGINS_WITH,
+} from "duenamodb";
+
+const filter = {
+	status: NOT("deleted"),
+	type: IN("A", "B"),
+	createdAt: IS_BETWEEN(0, 1000),
+};
 ```
 
-Get item:
+These helpers power `filter` and sort-key conditions in `createQueryItems` and `createScanItems`, but you can also use the lower-level exports (`createConditionExpression`, `expressionAttributeNames`, etc.) if you need direct access to the generated structures.
 
-```ts
-const getResult = await getItem('1');
-```
+## Direct command helpers
 
-Update item:
+Every module also exports the underlying functions (`putItem`, `getItem`, `updateItem`, `deleteItem`, `scanItems`, `queryItems`) in case you prefer to pass already-marshalled input yourself. They expect DynamoDB-native shapes and mirror the AWS SDK response handling.
 
-```ts
-const updateResult = await updateItem(
-  { ...item, name: 'bar' },
-  { updateKeys: ['name'] }
-);
-```
-
-Scan items:
-
-```ts
-const scanResult = await scanItems();
-```
-
-Query items:
-
-```ts
-const queryResult = await queryItems('foo');
-```
-
-Delete item:
-
-```ts
-const success = await deleteItem('1');
-```
