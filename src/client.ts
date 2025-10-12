@@ -15,17 +15,6 @@ export class DDBClient {
 			DDBClient._params.region = process.env.AWS_REGION;
 		}
 
-		if (
-			!DDBClient._params.credentials &&
-			process.env.AWS_ACCESS_KEY_ID &&
-			process.env.AWS_SECRET_ACCESS_KEY
-		) {
-			DDBClient._params.credentials = {
-				accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-				secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-			};
-		}
-
 		const isVercel = process.env.VERCEL || process.env.VERCEL_OIDC_TOKEN;
 		if (
 			!DDBClient._params.credentials &&
@@ -35,6 +24,17 @@ export class DDBClient {
 			DDBClient._params.credentials = awsCredentialsProvider({
 				roleArn: process.env.AWS_ROLE_ARN,
 			});
+		}
+
+		if (
+			!DDBClient._params.credentials &&
+			process.env.AWS_ACCESS_KEY_ID &&
+			process.env.AWS_SECRET_ACCESS_KEY
+		) {
+			DDBClient._params.credentials = {
+				accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+				secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+			};
 		}
 
 		return DDBClient._params;
